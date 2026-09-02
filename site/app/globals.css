@@ -353,3 +353,103 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 500 clamp(42px, 5.2vw, 72px)/1
 :focus-visible { outline: 2px solid var(--umber); outline-offset: 2px; }
 
 nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
+
+/* --- Counterfactual page --- */
+.cf-page { padding: clamp(56px, 6vw, 84px) 5vw 80px; }
+.cf-page > * { max-width: 1260px; margin-left: auto; margin-right: auto; }
+.cf-page h1 { max-width: 900px; margin: 14px auto 18px; font: 500 clamp(36px, 4.6vw, 60px)/1.04 Georgia, 'Times New Roman', serif; letter-spacing: -.035em; }
+.cf-page h1:focus { outline: none; }
+.cf-standfirst { max-width: 760px; margin: 0 auto 12px; color: var(--muted); font-size: clamp(15px, 1.4vw, 18px); line-height: 1.6; }
+.cf-deviations { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 auto 30px; padding: 0; list-style: none; }
+.cf-deviations li { padding: 5px 8px; border: 1px solid rgba(148,119,96,.35); color: var(--umber); font-size: 11px; }
+.cf-card { margin-top: 18px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--panel); }
+.cf-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--line); }
+.cf-card-head h2 { margin: 0; font: 500 20px Georgia, serif; }
+.cf-card-body { padding: 20px 22px; }
+.cf-timeline { margin: 0; }
+.cf-timeline svg { display: block; width: 100%; height: auto; overflow: visible; }
+.cf-timeline figcaption { margin-top: 8px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.cf-grid line { stroke: var(--line); }
+.cf-grid text { fill: var(--muted); font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cf-oi-line { stroke: var(--umber); stroke-dasharray: 4 4; }
+.cf-oi-label { fill: var(--umber); font: 700 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cf-point { cursor: pointer; fill: var(--sage); stroke: var(--panel); stroke-width: 1; }
+.cf-point.infeasible { fill: var(--red); }
+.cf-point.selected { stroke: var(--ink); stroke-width: 2; }
+.cf-point:hover { stroke: var(--ink); }
+.cf-scrub { display: grid; grid-template-columns: auto minmax(200px, 1fr) auto auto; gap: 10px; align-items: center; margin-top: 14px; }
+.cf-scrub input[type="range"] { width: 100%; accent-color: var(--slate); }
+.cf-scrub input[type="date"] { min-height: 40px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: var(--panel); }
+.cf-step { min-height: 40px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--slate); background: var(--panel); cursor: pointer; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.cf-step:disabled { opacity: .4; cursor: not-allowed; }
+.cf-caption { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.cf-caption strong { color: var(--ink); }
+.cf-inputs { display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)) minmax(300px, 1.4fr) auto; gap: 10px; align-items: end; padding: 18px 22px; border-top: 1px solid var(--line); }
+.cf-inputs .scenario-control { min-width: 0; }
+.cf-field > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .09em; }
+.cf-field input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: var(--panel); }
+.cf-field small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+.cf-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.cf-facts > div { display: flex; flex-direction: column; gap: 4px; padding: 11px; border: 1px solid var(--line); background: var(--paper); }
+.cf-facts span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.cf-facts strong { font-size: 13px; }
+.cf-facts small { color: var(--muted); font-size: 10px; }
+.cf-attempts { max-height: 260px; margin: 16px 0 0; padding: 0; overflow-y: auto; border: 1px solid var(--line); list-style: none; }
+.cf-attempts li { display: grid; grid-template-columns: minmax(0, 1fr) 110px 150px; gap: 12px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); font-size: 12px; }
+.cf-attempts li:first-child { border-top: 0; }
+.cf-attempts a { color: var(--slate); }
+.cf-attempts a span { margin-right: 8px; color: var(--muted); font: 700 9.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cf-attempts li > span { color: var(--muted); text-align: right; }
+.cf-chain { margin-bottom: 22px; }
+.cf-chain .load-orb small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.cf-card-body .stage-decision { margin-top: 18px; padding: 13px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: var(--paper); font-size: 12.5px; line-height: 1.5; }
+.cf-card-body .stage-decision.admit { color: var(--green); border-color: rgba(96,118,108,.38); background: rgba(96,118,108,.06); }
+.cf-card-body .stage-decision.reject { color: var(--red); border-color: rgba(143,97,92,.38); background: rgba(143,97,92,.06); }
+.cf-headline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
+.cf-headline > div { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
+.cf-headline span { color: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; }
+.cf-headline strong { font: 500 26px Georgia, serif; color: var(--slate); }
+.cf-headline small { color: var(--muted); font-size: 9.5px; }
+.cf-quantile-head, .cf-quantile-row { display: grid; grid-template-columns: minmax(150px, 1.6fr) repeat(5, 1fr); gap: 7px; align-items: center; }
+.cf-quantile-head { padding: 0 7px 6px; color: var(--muted); font-size: 9.5px; text-align: right; text-transform: uppercase; }
+.cf-quantile-row { padding: 9px 7px; border-top: 1px solid var(--line); font-size: 11px; }
+.cf-quantile-row strong { font-weight: 650; }
+.cf-quantile-row span { text-align: right; }
+.cf-scenario-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 22px 0 8px; }
+.cf-scenario-title h3 { margin: 0; font: 500 17px Georgia, serif; }
+.cf-scenario-title span { color: var(--muted); font-size: 11px; text-align: right; }
+.cf-shares { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cf-shares span { padding: 5px 7px; border: 1px solid var(--line); color: var(--muted); font-size: 10.5px; }
+.cf-ecdf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.cf-ecdf-panel { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
+.cf-ecdf-panel.highlighted { border-color: var(--sage); background: rgba(127,147,140,.06); }
+.cf-ecdf-panel figcaption { margin-bottom: 6px; color: var(--ink); font-size: 11.5px; font-weight: 700; }
+.cf-ecdf-panel svg { display: block; width: 100%; height: auto; }
+.cf-ecdf-panel path { fill: none; stroke: var(--sage); stroke-width: 1.6; }
+.cf-ecdf-panel.highlighted path { stroke: var(--slate); stroke-width: 2; }
+.cf-ecdf-panel small { display: block; margin-top: 6px; color: var(--muted); font-size: 10px; }
+.cf-draw { margin-top: 22px; }
+.cf-repro { margin: 18px 0 0; color: var(--muted); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cf-method { margin: 24px auto 0; padding: 0 0 0 18px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+.cf-method li { margin-bottom: 6px; }
+.cf-computing { opacity: .55; transition: opacity .2s ease; }
+.cf-status { margin: 0 0 12px; color: var(--umber); font-size: 12px; }
+
+@media (max-width: 1080px) {
+  .cf-inputs { grid-template-columns: 1fr 1fr; }
+  .cf-facts { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 780px) {
+  .cf-scrub { grid-template-columns: 1fr 1fr; }
+  .cf-scrub input[type="range"] { grid-column: 1 / -1; }
+  .cf-headline, .cf-ecdf { grid-template-columns: 1fr; }
+  .cf-attempts li { grid-template-columns: 1fr; gap: 4px; }
+  .cf-attempts li > span { text-align: left; }
+  .cf-quantile-head, .cf-quantile-row { grid-template-columns: 1.2fr repeat(5, 1fr); gap: 3px; font-size: 9.5px; }
+}
+
+@media (max-width: 540px) {
+  .cf-page { padding-left: 17px; padding-right: 17px; }
+  .cf-inputs, .cf-facts { grid-template-columns: 1fr; }
+}

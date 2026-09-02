@@ -31,6 +31,6 @@ export default function App() {
   }, [path]);
 
   if (!route) return <main className="load-state" aria-busy="true" />;
-  if (route.path === '/counterfactual') return <CounterfactualPage />;
+  if (route.path === '/counterfactual') return <CounterfactualPage params={route.params} setParams={route.setParams} />;
   return <Dashboard />;
 }
