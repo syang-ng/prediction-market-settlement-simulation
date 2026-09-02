@@ -33,7 +33,7 @@ Settled during brainstorming; fixed inputs to this design.
 | Decision | Choice | Why |
 | --- | --- | --- |
 | Security parameter α | **0.5**, matching the frozen data | Every shipped result uses `corruption_threshold = 0.5`, `attack_capture_fraction = 1.0`, `slash_fraction = 1.0`, so `r_USD = OI / 0.5`. The request mentioned α = 0.65, which is only the unused CLI default in `build_dispute_panel.py`; no shipped data uses it. Matching 0.5 keeps counterfactual rewards comparable to the dashboard. |
-| Snapshot unit | **One snapshot per DVM voting round** (401 rounds, 2023-03-22 to 2026-05-31) | Within a round every request sees identical per-voter stake (0 conflicts across 1,119,968 voter rows), and each request's revealer set is ~99.7% of the round union. The union is the same rule the economic panel already applies to NegRisk bundles. Payload ≈ 2.5 MB versus ≈ 21 MB for per-attempt snapshots. |
+| Snapshot unit | **One snapshot per DVM voting round** (401 rounds, 2023-03-22 to 2026-05-31) | Within a round every request sees identical per-voter stake (0 conflicts across 1,119,968 voter rows), and each request's revealer set is ~99.7% of the round union. The union is the same rule the economic panel already applies to NegRisk bundles. Payload ≈ 3 MB versus ≈ 21 MB for per-attempt snapshots. |
 | Placement | **New hash route `#/counterfactual`** | The approved (not yet implemented) restyle spec commits to hash routing in one shell so both build targets behave identically. The router built here is the first piece of that plan. |
 | Time sweep | **Not included** | Ship the single-snapshot counterfactual first. The time axis still shows feasibility over time analytically (see Page). |
 | Population caveat | Revealers only | The data contains voters who revealed in a round, not every staker. This matches the main simulation's first stated limitation and is restated on the page. |
@@ -105,7 +105,7 @@ today; migrating it into the hash belongs to the restyle spec's Phase 1.
 ### Data flow
 
 ```
-build_dashboard_data.py ──► public/data/stake_snapshots.json (≈2.5 MB, cached)
+build_dashboard_data.py ──► public/data/stake_snapshots.json (≈3 MB, cached)
                                           │  fetched lazily on first visit to #/counterfactual
 CounterfactualPage ── params from hash ──► selectSnapshot(round) ──► runCounterfactual(snapshot, oi, seed, trials)
                                           │                               (pure, synchronous, src/simulation/)
