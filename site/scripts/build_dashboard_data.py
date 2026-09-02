@@ -64,6 +64,10 @@ SNAPSHOT_CACHE_KEYS = (
     "costModel",
     "defaults",
 )
+# Corruption threshold alpha for the counterfactual page (r_USD = kappa * OI / alpha).
+# Set to 0.65 at the owner's request on 2026-09-02; the frozen dashboard results keep
+# the census value (0.5) because they were simulated with it.
+COUNTERFACTUAL_CORRUPTION_THRESHOLD = 0.65
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -785,7 +789,7 @@ def build(argv: list[str] | None = None) -> None:
         "anchorRule": "earliest dispute in the round supplies UMA price and dispute time",
         "roundWindowSeconds": ROUND_WINDOW_SECONDS,
         "security": {
-            "corruptionThreshold": float(census_manifest["corruption_threshold"]),
+            "corruptionThreshold": COUNTERFACTUAL_CORRUPTION_THRESHOLD,
             "attackCaptureFraction": float(census_manifest["attack_capture_fraction"]),
             "slashFraction": float(full_summary["security"]["slash_fraction"]),
         },

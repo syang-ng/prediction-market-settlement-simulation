@@ -44,8 +44,9 @@ same one-cent minimum-reward search, ported to TypeScript under
   snapshot per DVM round (401 rounds, 2023-03 to 2026-05): the union of
   positive-stake revealers across the round's attempts, in canonical address
   order, with the earliest dispute's UMA price.
-- Security constants match the frozen data: `r_USD = OI / 0.5`,
-  `r_UMA = r_USD / P_UMA`, slash fraction 1.
+- Security: `r_USD = OI / 0.65` (α = 0.65 for this page; the frozen dashboard
+  results were simulated with the census value 0.5), `r_UMA = r_USD / P_UMA`,
+  slash fraction 1.
 - Reproducibility: costs come from a seeded xoshiro128** PRNG (default seed
   20260821, the Python master seed) and a Beta(2, 8) order-statistic sampler.
   The URL carries `round`, `oi`, `seed`, `trials`, and `scenario`, so a
