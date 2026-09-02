@@ -356,6 +356,120 @@ def build_illustrations(
     return output
 
 
+def budget_caps_from_summary(panel_summary: list[dict[str, object]]) -> list[float]:
+    """Recover the --budget-caps of the frozen run from its summary keys."""
+
+    caps: set[float] = set()
+    for row in panel_summary:
+        for key in row:
+            match = re.fullmatch(r"posted_reward_le_(.+)_usd_share", key)
+            if match:
+                caps.add(float(match.group(1)))
+    if not caps:
+        raise AssertionError("panel summary has no posted_reward_le_<cap>_usd_share fields")
+    return sorted(caps)
+
+
+def build_stake_snapshots(
+    loader: PanelLoader,
+    panel_by_unit: dict[str, dict[str, str]],
+    full_by_unit: dict[str, dict[str, dict[str, str]]],
+    meta: dict[str, object],
+    output_path: Path,
+) -> dict[str, object]:
+    """Write one stake snapshot per DVM round for the browser counterfactual page.
+
+    The cache key is the subset of ``meta`` in ``SNAPSHOT_CACHE_KEYS``; when it
+    matches the existing file, the 66 MB voter table is not re-read.
+    """
+
+    if output_path.exists():
+        cached = read_json(output_path)
+        cached_meta = cached.get("meta")
+        if isinstance(cached_meta, dict) and all(
+            cached_meta.get(key) == meta[key] for key in SNAPSHOT_CACHE_KEYS
+        ):
+            print(f"Reusing cached stake snapshots at {output_path}")
+            return cached
+
+    markets, candidates = loader.load()
+    snapshots: list[dict[str, object]] = []
+    for union in round_unions(markets, candidates):
+        attempts: list[dict[str, object]] = []
+        for market in union.markets:
+            panel = panel_by_unit[market.unit_id]
+            baseline = full_by_unit[market.unit_id]["baseline"]
+            feasible = boolean(baseline["capacity_feasible"])
+            attempts.append(
+                {
+                    "unitId": market.unit_id,
+                    "rank": market.sample_rank,
+                    "question": market.question,
+                    "negRisk": boolean(panel["neg_risk"]),
+                    "oiUsd": market.oi_usd,
+                    "feasible": feasible,
+                    "baselineRewardP50Usd": (
+                        number(baseline["posted_greedy_reward_usd_p50"]) if feasible else None
+                    ),
+                }
+            )
+        anchor_panel = panel_by_unit[union.anchor.unit_id]
+        snapshots.append(
+            {
+                "round": union.round,
+                "windowStartUtc": utc_iso(union.round * ROUND_WINDOW_SECONDS),
+                "windowEndUtc": utc_iso((union.round + 1) * ROUND_WINDOW_SECONDS),
+                "anchorDisputeUtc": union.anchor.dispute_utc,
+                "anchorUnitId": union.anchor.unit_id,
+                "anchorRank": union.anchor.sample_rank,
+                "umaPriceUsd": union.anchor.uma_price_usd,
+                "umaPriceMethod": anchor_panel["uma_price_method"],
+                "cumulativeStakeAtRoundUma": union.anchor.total_stake_uma,
+                "voterCount": len(union.stakes_uma),
+                "unionStakeUma": union.union_stake_uma,
+                "stakesUma": list(union.stakes_uma),
+                "attempts": attempts,
+            }
+        )
+
+    if len(snapshots) != len({market.dvm_round for market in markets}):
+        raise AssertionError("snapshot count does not match the number of DVM rounds")
+    if sum(len(snapshot["attempts"]) for snapshot in snapshots) != len(markets):
+        raise AssertionError("snapshot attempts do not cover every panel unit")
+    rounds = [int(snapshot["round"]) for snapshot in snapshots]
+    if rounds != sorted(rounds):
+        raise AssertionError("snapshots must be sorted by round")
+    for snapshot in snapshots:
+        stakes = snapshot["stakesUma"]
+        if not stakes or any(not math.isfinite(stake) or stake <= 0 for stake in stakes):
+            raise AssertionError(f"round {snapshot['round']} has an invalid stake vector")
+        anchor_timestamp = iso_to_timestamp(str(snapshot["anchorDisputeUtc"]))
+        for attempt in snapshot["attempts"]:
+            if anchor_timestamp > iso_to_timestamp(panel_by_unit[attempt["unitId"]]["dispute_utc"]):
+                raise AssertionError(f"round {snapshot['round']} anchor is not the earliest dispute")
+        if anchor_timestamp >= iso_to_timestamp(str(snapshot["windowEndUtc"])):
+            raise AssertionError(f"round {snapshot['round']} dispute arrives after its voting window")
+
+    payload: dict[str, object] = {
+        "meta": meta
+        | {
+            "roundCount": len(snapshots),
+            "positiveStakeCount": sum(int(snapshot["voterCount"]) for snapshot in snapshots),
+        },
+        "snapshots": snapshots,
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":"), allow_nan=False),
+        encoding="utf-8",
+    )
+    print(
+        f"Wrote {output_path} with {len(snapshots)} DVM-round stake snapshots "
+        f"({payload['meta']['positiveStakeCount']} positive stakes)"
+    )
+    return payload
+
+
 def build(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     panel_path = args.panel_dir / "economic_markets.csv"
@@ -653,6 +767,47 @@ def build(argv: list[str] | None = None) -> None:
                 < market["securityLoadUma"]
             ):
                 raise AssertionError("illustration totals do not reconcile")
+    if "Beta(2, 8)" not in str(cost_model["marginal_distribution"]):
+        raise AssertionError("cost model is not the documented Beta(2, 8) construction")
+    snapshot_meta: dict[str, object] = {
+        "schema": STAKE_SNAPSHOT_SCHEMA,
+        "panelSha256": str(panel_manifest["market_sha256"]),
+        "voterSha256": str(panel_manifest["voter_sha256"]),
+        "snapshotRule": (
+            "union of positive-stake revealers across all attempts in one DVM round; "
+            "exact same-round stake agreement asserted"
+        ),
+        "anchorRule": "earliest dispute in the round supplies UMA price and dispute time",
+        "roundWindowSeconds": ROUND_WINDOW_SECONDS,
+        "security": {
+            "corruptionThreshold": float(census_manifest["corruption_threshold"]),
+            "attackCaptureFraction": float(census_manifest["attack_capture_fraction"]),
+            "slashFraction": float(full_summary["security"]["slash_fraction"]),
+        },
+        "costModel": {
+            "beta": [2, 8],
+            "multiplierSupport": [0.25, 4.0],
+            "scenarioMeansUsd": {
+                scenario: float(cost_model["scenario_means_usd"][scenario])
+                for scenario in SCENARIOS
+            },
+            "correlation": float(cost_model["within_unit_pairwise_correlation"]),
+        },
+        "defaults": {
+            "oiUsd": 1_000_000,
+            "seed": int(reproducibility["master_seed"]),
+            "trials": int(reproducibility["trials_per_unit"]),
+            "maxTrials": 5000,
+            "budgetCapsUsd": budget_caps_from_summary(full_summary["panel_summary"]),
+        },
+    }
+    build_stake_snapshots(
+        loader,
+        {row["unit_id"]: row for row in panel_rows},
+        full_by_unit,
+        snapshot_meta,
+        args.output_dir / "stake_snapshots.json",
+    )
     print(
         f"Wrote {args.output_dir / 'dashboard.json'} with "
         f"{len(markets)} corrected economic settlement attempts"
