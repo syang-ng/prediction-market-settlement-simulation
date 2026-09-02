@@ -309,8 +309,8 @@ The approved restyle can recolor it through tokens later.
      reader sees feasibility over time without a sweep. The y-domain always
      includes both the data and the OI line, padded by a factor of 1.5 at
      each end, so an extreme OI never pushes the line off the chart. The
-     selected round is highlighted; hovering or focusing a point shows round,
-     date, and value.
+     selected round is highlighted; hovering a point shows round, date, and
+     value, and clicking one selects it.
    - Controls under the chart: `<input type="range">` over round indices,
      `<input type="date">` that snaps to the round whose anchor date is nearest
      (ties → earlier round), and previous / next buttons. A caption reads
@@ -319,7 +319,8 @@ The approved restyle can recolor it through tokens later.
 3. **Inputs row** — OI in USD (default 1,000,000), seed (default 20260821),
    trials (default 1,000, integer 1–5,000), and the low / baseline / high
    scenario toggle that only chooses which scenario the ECDF emphasises and the
-   draw illustration uses; all three scenarios are always computed. A "Reset to
+   draw illustration uses; all three scenarios are always computed. The
+   three number fields apply on Enter or when they lose focus. A "Reset to
    defaults" button.
 4. **Snapshot facts** (`data-label observed`) — round and window, anchor
    dispute time, UMA price and method, positive-stake voters, available stake
@@ -432,7 +433,9 @@ runs `vitest run`. No runtime dependency is added.
    scrolls; `#/counterfactual` loads the snapshot file exactly once across
    repeated parameter changes; a hard refresh of a fully specified URL shows the
    same numbers; the fallback route works for an unknown hash; keyboard reaches
-   slider, date, inputs, toggle, and chart points with a visible focus ring.
+   the round buttons, slider, date field, number fields, scenario toggle, and
+   reset button with a visible focus ring. The slider stands in for the 401
+   chart points, which are click and hover targets only.
 10. **Timing.** The largest round at 1,000 trials completes under 500 ms in
     the reproducibility line; if it does not, the Worker fallback is implemented
     before shipping.
@@ -455,11 +458,11 @@ runs `vitest run`. No runtime dependency is added.
 | --- | --- |
 | `site/scripts/build_dashboard_data.py` | add `build_stake_snapshots`, write and cache `stake_snapshots.json` |
 | `site/scripts/export_counterfactual_fixture.py` | new; writes test fixtures from the Python core |
-| `site/src/simulation/{prng,costs,greedy,stats,counterfactual,types}.ts` | new pure core |
-| `site/src/simulation/*.test.ts`, `__fixtures__/round-*.json` | new tests and fixtures |
+| `site/src/simulation/{numerics,prng,costs,greedy,stats,counterfactual,types}.ts` | new pure core |
+| `site/src/simulation/*.test.ts`, `testFixtures.ts`, `__fixtures__/round-*.json` | new tests, fixture loader, and fixtures |
 | `site/src/useHashRoute.ts`, `site/src/App.tsx` | new router and shell |
 | `site/src/components/SiteHeader.tsx` | move-only extraction from `Dashboard.tsx` plus one nav link |
-| `site/src/routes/Counterfactual.tsx` (+ `StakeTimeline.tsx`, `RewardEcdf.tsx` under `components/`) | new page and its two SVG charts |
+| `site/src/routes/Counterfactual.tsx`, `site/src/routes/counterfactualParams.ts` (+ `StakeTimeline.tsx`, `RewardEcdf.tsx` under `components/`) | new page, its URL-state helpers, and its two SVG charts |
 | `site/src/Dashboard.tsx` | use `SiteHeader`; hero `<h1>` gets `tabIndex={-1}` as the route focus target; otherwise unchanged |
 | `site/src/types.ts` | add snapshot file types |
 | `site/app/page.tsx`, `site/src/main.tsx` | render `<App />` |
