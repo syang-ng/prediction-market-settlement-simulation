@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mean, quantileLinear, shareAtMost, sortedCopy, summarize } from './stats';
+import { FIXTURE_ROUNDS, FIXTURE_SCENARIOS, expectRelative, loadFixture } from './testFixtures';
 
 describe('numpy-linear quantiles', () => {
   const four = Float64Array.from([1, 2, 3, 4]);
@@ -41,3 +42,22 @@ describe('summaries', () => {
     expect(shareAtMost([1, 2, 3, 4], 4)).toBe(1);
   });
 });
+
+for (const round of FIXTURE_ROUNDS) {
+  describe(`quantiles against NumPy for fixture round ${round}`, () => {
+    const fixture = loadFixture(round);
+
+    it('matches percentile_fields exactly on posted rewards and within 1e-12 on means', () => {
+      FIXTURE_SCENARIOS.forEach((name, s) => {
+        const posted = fixture.expected.postedRewardUsd.map((row) => row[s]);
+        const summary = summarize(posted);
+        const expected = fixture.expectedQuantiles[name].postedRewardUsd;
+        expect(summary.p10).toBe(expected.p10);
+        expect(summary.p50).toBe(expected.p50);
+        expect(summary.p90).toBe(expected.p90);
+        expect(summary.p99).toBe(expected.p99);
+        expectRelative(summary.mean as number, expected.mean as number, 1e-12);
+      });
+    });
+  });
+}
