@@ -118,12 +118,17 @@ describe('runCounterfactual', () => {
     expect(() => runCounterfactual(small, { ...params, trials: 0 }, model)).toThrow('trials');
     expect(() => runCounterfactual(small, { ...params, seed: -1 }, model)).toThrow('seed');
     expect(() => runCounterfactual(small, { ...params, seed: 1.5 }, model)).toThrow('seed');
+    expect(() => runCounterfactual(small, { ...params, oiUsd: Number.NaN }, model)).toThrow('open interest');
+    expect(() => runCounterfactual(small, { ...params, trials: 2.5 }, model)).toThrow('trials');
   });
 
   it('completes the largest round at 1,000 trials well inside the budget', () => {
     const large = prepareSnapshot(snapshotFromFixture(10196));
     const result = runCounterfactual(large, { oiUsd: 1_000_000, seed: 20260821, trials: 1000 }, model);
     console.log(`largest round (1,012 voters): ${result.timingMs.toFixed(0)} ms for 1,000 trials × 3 scenarios`);
-    expect(result.timingMs).toBeLessThan(5000);
+    // The product budget is 500 ms on a 2020-class laptop and is enforced by the browser
+    // check in the plan's verification task; this unit guard only has to catch a regression
+    // of several times that without becoming flaky on slower CI machines.
+    expect(result.timingMs).toBeLessThan(2000);
   });
 });
