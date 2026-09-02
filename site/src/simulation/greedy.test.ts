@@ -26,6 +26,7 @@ describe('hand-checked three-voter case', () => {
     expect(() => minimumCentRewards(stakes, costs, 31, [1])).toThrow('structurally infeasible');
     expect(() => minimumCentRewards(Float64Array.from([10, 0]), Float64Array.from([1, 1]), 5, [1])).toThrow('finite and positive');
     expect(() => minimumCentRewards(stakes, costs, 0, [1])).toThrow('required stake');
+    expect(() => minimumCentRewards(stakes, costs, 20, [])).toThrow('scenario scales');
   });
 
   it('computes the stake-descending minimum count and the effective count', () => {

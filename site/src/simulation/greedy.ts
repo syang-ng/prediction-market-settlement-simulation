@@ -15,7 +15,8 @@ const MAX_UPPER_DOUBLINGS = 32;
 const MAX_CENT_UPPER_ADJUSTMENTS = 4;
 const MAX_CENT_ITERATIONS = 128;
 // Above this tick index adjacent grid rewards stop being distinguishable in binary64.
-const MAX_EXACT_TICK_INDEX = 2 ** 52 - 8;
+// 2^52 − 8, written as a literal so the core never uses the exponentiation operator.
+const MAX_EXACT_TICK_INDEX = 4503599627370496 - 8;
 const PAYOFF_TOLERANCE_USD = 1e-9;
 
 export interface SortedCandidates {
@@ -166,6 +167,7 @@ export function minimumCentRewards(
     if (!Number.isFinite(normalizedCosts[i]) || normalizedCosts[i] < 0) throw new Error('batch costs must be finite and nonnegative');
   }
   if (!Number.isFinite(requiredStakeUma) || requiredStakeUma <= 0) throw new Error('required stake must be finite and positive');
+  if (scales.length === 0) throw new Error('scenario scales must be finite and positive');
   for (const scale of scales) {
     if (!Number.isFinite(scale) || scale <= 0) throw new Error('scenario scales must be finite and positive');
   }
