@@ -19,6 +19,12 @@ const MAX_CENT_ITERATIONS = 128;
 const MAX_EXACT_TICK_INDEX = 4503599627370496 - 8;
 const PAYOFF_TOLERANCE_USD = 1e-9;
 
+/**
+ * Candidates sorted by η ascending. When produced with an explicit workspace,
+ * every array here is a view into that workspace's buffers and stays valid
+ * only until the next sortCandidates/minimumCentRewards call using the same
+ * workspace.
+ */
 export interface SortedCandidates {
   /** Canonical (address-order) index at each sorted position. */
   order: Int32Array;
@@ -48,20 +54,90 @@ export interface TrialScenarioResult {
   selectedPositions: number[] | null;
 }
 
+/** Reusable buffers for sortCandidates; sized for a candidate count, reused across trials to avoid allocation. */
+export interface GreedyWorkspace {
+  rawEta: Float64Array;
+  orderA: Int32Array;
+  orderB: Int32Array;
+  stakes: Float64Array;
+  eta: Float64Array;
+  baseCosts: Float64Array;
+  cumulative: Float64Array;
+}
+
+export function createGreedyWorkspace(candidateCount: number): GreedyWorkspace {
+  return {
+    rawEta: new Float64Array(candidateCount),
+    orderA: new Int32Array(candidateCount),
+    orderB: new Int32Array(candidateCount),
+    stakes: new Float64Array(candidateCount),
+    eta: new Float64Array(candidateCount),
+    baseCosts: new Float64Array(candidateCount),
+    cumulative: new Float64Array(candidateCount),
+  };
+}
+
+/**
+ * Stable bottom-up merge sort of the indices 0 .. count by key ascending. Equal
+ * keys keep the lower index first, which is exactly numpy's stable argsort and
+ * the comparator (η, index) it replaces. Returns whichever buffer holds the result.
+ */
+function sortIndicesByKey(keys: Float64Array, count: number, orderA: Int32Array, orderB: Int32Array): Int32Array {
+  for (let i = 0; i < count; i += 1) orderA[i] = i;
+  let source = orderA;
+  let target = orderB;
+  for (let width = 1; width < count; width *= 2) {
+    for (let low = 0; low < count; low += 2 * width) {
+      const middle = Math.min(low + width, count);
+      const high = Math.min(low + 2 * width, count);
+      let i = low;
+      let j = middle;
+      let k = low;
+      while (i < middle && j < high) {
+        if (keys[source[j]] < keys[source[i]]) {
+          target[k] = source[j];
+          j += 1;
+        } else {
+          target[k] = source[i];
+          i += 1;
+        }
+        k += 1;
+      }
+      while (i < middle) {
+        target[k] = source[i];
+        i += 1;
+        k += 1;
+      }
+      while (j < high) {
+        target[k] = source[j];
+        j += 1;
+        k += 1;
+      }
+    }
+    const swap = source;
+    source = target;
+    target = swap;
+  }
+  return source;
+}
+
 /** Sort by η ascending with the canonical index as tie-break (numpy stable argsort). */
-export function sortCandidates(stakesUma: Float64Array, normalizedCosts: Float64Array, capacityUma: number): SortedCandidates {
+export function sortCandidates(
+  stakesUma: Float64Array,
+  normalizedCosts: Float64Array,
+  capacityUma: number,
+  workspace: GreedyWorkspace = createGreedyWorkspace(stakesUma.length),
+): SortedCandidates {
   const n = stakesUma.length;
   if (normalizedCosts.length !== n) throw new Error('stakes and costs must have equal length');
-  const rawEta = new Float64Array(n);
+  if (workspace.rawEta.length < n) throw new Error('workspace is smaller than the candidate count');
+  const rawEta = workspace.rawEta;
   for (let i = 0; i < n; i += 1) rawEta[i] = normalizedCosts[i] / stakesUma[i];
-  const indices: number[] = new Array<number>(n);
-  for (let i = 0; i < n; i += 1) indices[i] = i;
-  indices.sort((a, b) => (rawEta[a] < rawEta[b] ? -1 : rawEta[a] > rawEta[b] ? 1 : a - b));
-  const order = Int32Array.from(indices);
-  const stakes = new Float64Array(n);
-  const eta = new Float64Array(n);
-  const baseCosts = new Float64Array(n);
-  const cumulative = new Float64Array(n);
+  const order = sortIndicesByKey(rawEta, n, workspace.orderA, workspace.orderB).subarray(0, n);
+  const stakes = workspace.stakes.subarray(0, n);
+  const eta = workspace.eta.subarray(0, n);
+  const baseCosts = workspace.baseCosts.subarray(0, n);
+  const cumulative = workspace.cumulative.subarray(0, n);
   let total = 0;
   let correction = 0;
   for (let p = 0; p < n; p += 1) {
@@ -160,6 +236,7 @@ export function minimumCentRewards(
   requiredStakeUma: number,
   scales: readonly number[],
   collectSelected = false,
+  workspace?: GreedyWorkspace,
 ): { results: TrialScenarioResult[]; sorted: SortedCandidates } {
   const n = stakesUma.length;
   if (n === 0) throw new Error('at least one candidate is required');
@@ -176,7 +253,7 @@ export function minimumCentRewards(
   const capacityUma = kahanTotal(stakesUma);
   if (!coverageReached(capacityUma, requiredStakeUma)) throw new Error('batch is structurally infeasible');
 
-  const sorted = sortCandidates(stakesUma, normalizedCosts, capacityUma);
+  const sorted = sortCandidates(stakesUma, normalizedCosts, capacityUma, workspace ?? createGreedyWorkspace(n));
   let k = -1;
   for (let p = 0; p < n; p += 1) {
     if (coverageReached(sorted.cumulative[p], requiredStakeUma)) {

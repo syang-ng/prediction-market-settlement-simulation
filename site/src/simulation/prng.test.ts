@@ -41,4 +41,19 @@ describe('seeded PRNG', () => {
     expect(createPrng(seedMaterial(1, 10303)).uniform53()).not.toBe(reference);
     expect(createPrng(seedMaterial(20260821, 10302)).uniform53()).not.toBe(reference);
   });
+
+  it('fills a buffer with exactly the sequential uniform53 stream, also when interleaved', () => {
+    const reference = createPrng(material);
+    const expected = Array.from({ length: 5000 }, () => reference.uniform53());
+    const bulk = createPrng(material);
+    const buffer = new Float64Array(5000);
+    bulk.fillUniform53(buffer, 5000);
+    expect(Array.from(buffer)).toEqual(expected);
+    const mixed = createPrng(material);
+    const head = [mixed.uniform53(), mixed.uniform53(), mixed.uniform53()];
+    const middle = new Float64Array(7);
+    mixed.fillUniform53(middle, 7);
+    const tail = [mixed.uniform53(), mixed.uniform53()];
+    expect([...head, ...Array.from(middle), ...tail]).toEqual(expected.slice(0, 12));
+  });
 });

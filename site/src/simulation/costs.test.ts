@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { COST_MULTIPLIER_LOWER, COST_MULTIPLIER_UPPER, drawBeta28, drawNormalizedCosts } from './costs';
+import { COST_MULTIPLIER_LOWER, COST_MULTIPLIER_UPPER, drawBeta28, drawNormalizedCosts, uniformsPerDraw } from './costs';
 import { createPrng } from './prng';
+import type { Prng } from './prng';
 
 function pearson(xs: number[], ys: number[]): number {
   const n = xs.length;
@@ -78,5 +79,55 @@ describe('correlated normalized costs', () => {
 
   it('rejects correlations outside [0, 1]', () => {
     expect(() => drawNormalizedCosts(createPrng('x'), new Float64Array(2), 1.5)).toThrow();
+  });
+});
+
+/** The original per-call construction, kept here as the reference the buffered version must reproduce exactly. */
+function referenceDraw(rng: Prng, voterCount: number, correlation: number): Float64Array {
+  const beta = () => {
+    let smallest = 2;
+    let second = 2;
+    for (let i = 0; i < 9; i += 1) {
+      const u = rng.uniform53();
+      if (u < smallest) {
+        second = smallest;
+        smallest = u;
+      } else if (u < second) {
+        second = u;
+      }
+    }
+    return second;
+  };
+  const out = new Float64Array(voterCount);
+  for (let i = 0; i < voterCount; i += 1) out[i] = beta();
+  if (correlation > 0) {
+    const common = beta();
+    if (correlation === 1) out.fill(common);
+    else {
+      const threshold = Math.sqrt(correlation);
+      for (let i = 0; i < voterCount; i += 1) if (rng.uniform53() < threshold) out[i] = common;
+    }
+  }
+  for (let i = 0; i < voterCount; i += 1) out[i] = 0.25 + 3.75 * out[i];
+  return out;
+}
+
+describe('buffered draw equals the per-call reference', () => {
+  it.each([0, 0.8, 1])('for correlation %s, with and without a scratch buffer', (correlation) => {
+    const expected = referenceDraw(createPrng('reference'), 57, correlation);
+    const direct = new Float64Array(57);
+    drawNormalizedCosts(createPrng('reference'), direct, correlation);
+    expect(Array.from(direct)).toEqual(Array.from(expected));
+    const scratch = new Float64Array(uniformsPerDraw(57, correlation) + 5);
+    const buffered = new Float64Array(57);
+    const rng = createPrng('reference');
+    drawNormalizedCosts(rng, buffered, correlation, scratch);
+    expect(Array.from(buffered)).toEqual(Array.from(expected));
+    // A second draw continues the stream exactly as the reference would.
+    const referenceRng = createPrng('reference');
+    referenceDraw(referenceRng, 57, correlation);
+    const expectedNext = referenceDraw(referenceRng, 57, correlation);
+    drawNormalizedCosts(rng, buffered, correlation, scratch);
+    expect(Array.from(buffered)).toEqual(Array.from(expectedNext));
   });
 });

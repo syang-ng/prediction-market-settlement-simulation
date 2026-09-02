@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveValidatorCount, minimumCentRewards, stakeDescMinimumCount } from './greedy';
+import { createGreedyWorkspace, effectiveValidatorCount, minimumCentRewards, sortCandidates, stakeDescMinimumCount } from './greedy';
 import { kahanTotal } from './numerics';
 import { FIXTURE_ROUNDS, FIXTURE_SCENARIOS, expectRelative, loadFixture } from './testFixtures';
 
@@ -47,6 +47,12 @@ describe('hand-checked three-voter case', () => {
     expect(effectiveValidatorCount(stakes)).toBe(3);
     expect(effectiveValidatorCount(Float64Array.from([30, 10]))).toBe(1600 / 1000);
   });
+
+  it('breaks equal η ties by canonical index', () => {
+    // η: 0.1, 0.05, 0.1, 0.05 → sorted order [1, 3, 0, 2]
+    const tied = sortCandidates(Float64Array.from([10, 20, 30, 40]), Float64Array.from([1, 1, 3, 2]), 100);
+    expect(Array.from(tied.order)).toEqual([1, 3, 0, 2]);
+  });
 });
 
 for (const round of FIXTURE_ROUNDS) {
@@ -75,6 +81,17 @@ for (const round of FIXTURE_ROUNDS) {
     it('reproduces the stake-descending minimum and the effective candidate count', () => {
       expect(stakeDescMinimumCount(stakes, fixture.requiredStakeUma)).toBe(fixture.stakeDescMinimumVoterCount);
       expectRelative(effectiveValidatorCount(stakes), fixture.effectiveCandidateCount, 1e-9);
+    });
+
+    it('sorts identically with a reused workspace and preserves stable tie-breaks', () => {
+      const workspace = createGreedyWorkspace(stakes.length);
+      for (let trial = 0; trial < 4; trial += 1) {
+        const costs = Float64Array.from(fixture.normalizedCosts[trial]);
+        const fresh = sortCandidates(stakes, costs, fixture.capacityUma);
+        const reused = sortCandidates(stakes, costs, fixture.capacityUma, workspace);
+        expect(Array.from(reused.order)).toEqual(Array.from(fresh.order));
+        expect(Array.from(reused.cumulative)).toEqual(Array.from(fresh.cumulative));
+      }
     });
   });
 }

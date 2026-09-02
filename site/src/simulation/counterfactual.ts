@@ -4,8 +4,8 @@
  */
 
 import type { ScenarioName, SecurityConstants, StakeSnapshot } from '../types';
-import { COST_MULTIPLIER_LOWER, COST_MULTIPLIER_UPPER, drawNormalizedCosts } from './costs';
-import { effectiveValidatorCount, minimumCentRewards, stakeDescMinimumCount } from './greedy';
+import { COST_MULTIPLIER_LOWER, COST_MULTIPLIER_UPPER, drawNormalizedCosts, uniformsPerDraw } from './costs';
+import { createGreedyWorkspace, effectiveValidatorCount, minimumCentRewards, stakeDescMinimumCount } from './greedy';
 import { coverageReached, kahanTotal } from './numerics';
 import { createPrng, seedMaterial } from './prng';
 import { shareAtMost, sortedCopy, summarize } from './stats';
@@ -74,6 +74,8 @@ export function runCounterfactual(prepared: PreparedSnapshot, params: Counterfac
   const scales = SCENARIO_ORDER.map((name) => model.costModel.scenarioMeansUsd[name]);
   const rng = createPrng(seedMaterial(params.seed, snapshot.round));
   const costs = new Float64Array(stakes.length);
+  const workspace = createGreedyWorkspace(stakes.length);
+  const uniforms = new Float64Array(uniformsPerDraw(stakes.length, model.costModel.correlation));
   const posted = scales.map(() => new Float64Array(params.trials));
   const counts = scales.map(() => new Float64Array(params.trials));
   const selectedStake = scales.map(() => new Float64Array(params.trials));
@@ -81,8 +83,8 @@ export function runCounterfactual(prepared: PreparedSnapshot, params: Counterfac
   const firstDraws: FirstDraw[] = [];
 
   for (let trial = 0; trial < params.trials; trial += 1) {
-    drawNormalizedCosts(rng, costs, model.costModel.correlation);
-    const { results, sorted } = minimumCentRewards(stakes, costs, requirement.requiredStakeUma, scales, trial === 0);
+    drawNormalizedCosts(rng, costs, model.costModel.correlation, uniforms);
+    const { results, sorted } = minimumCentRewards(stakes, costs, requirement.requiredStakeUma, scales, trial === 0, workspace);
     for (let s = 0; s < scales.length; s += 1) {
       posted[s][trial] = results[s].postedRewardUsd;
       counts[s][trial] = results[s].selectedVoterCount;

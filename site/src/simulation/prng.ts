@@ -8,6 +8,8 @@ export interface Prng {
   nextUint32(): number;
   /** Uniform in [0, 1) with 53 random bits. */
   uniform53(): number;
+  /** Fill out[0 .. count) with the next `count` values of uniform53(); same sequence, no per-call overhead. */
+  fillUniform53(out: Float64Array, count: number): void;
 }
 
 export const SEED_MATERIAL_TAG = 'counterfactual-cost-draws-v1';
@@ -67,5 +69,35 @@ export function createPrng(material: string): Prng {
 
   const uniform53 = (): number => ((nextUint32() >>> 5) * 67108864 + (nextUint32() >>> 6)) / 9007199254740992;
 
-  return { nextUint32, uniform53 };
+  const fillUniform53 = (out: Float64Array, count: number): void => {
+    let a = s0;
+    let b = s1;
+    let c = s2;
+    let d = s3;
+    for (let i = 0; i < count; i += 1) {
+      const high = Math.imul(rotl(Math.imul(b, 5), 7), 9) >>> 0;
+      let t = b << 9;
+      c ^= a;
+      d ^= b;
+      b ^= c;
+      a ^= d;
+      c ^= t;
+      d = rotl(d, 11);
+      const low = Math.imul(rotl(Math.imul(b, 5), 7), 9) >>> 0;
+      t = b << 9;
+      c ^= a;
+      d ^= b;
+      b ^= c;
+      a ^= d;
+      c ^= t;
+      d = rotl(d, 11);
+      out[i] = ((high >>> 5) * 67108864 + (low >>> 6)) / 9007199254740992;
+    }
+    s0 = a;
+    s1 = b;
+    s2 = c;
+    s3 = d;
+  };
+
+  return { nextUint32, uniform53, fillUniform53 };
 }

@@ -131,4 +131,19 @@ describe('runCounterfactual', () => {
     // of several times that without becoming flaky on slower CI machines.
     expect(result.timingMs).toBeLessThan(2000);
   });
+
+  it('reproduces the pinned results of the reference implementation', () => {
+    const result = runCounterfactual(small, params, model);
+    const baseline = result.scenarios?.baseline;
+    if (!baseline) throw new Error('expected a feasible run');
+    expect(baseline.postedReward).toEqual({ p10: 0.45, p50: 0.78, p90: 1.623, p99: 2.2500999999999998, mean: 0.9016000000000001 });
+    expect(result.scenarios?.low.postedReward.p50).toBe(0.16);
+    expect(result.scenarios?.high.postedReward.p50).toBe(3.105);
+    expect(baseline.selectedVoterCount.p50).toBe(1);
+    expect(baseline.postedRewardsSorted[0]).toBe(0.28);
+    expect(baseline.postedRewardsSorted[199]).toBe(2.31);
+    expect(baseline.firstDraw.rewardUsd).toBe(0.71);
+    expect(baseline.firstDraw.voters).toHaveLength(1);
+    expect(baseline.firstDraw.voters[0]).toEqual({ index: 40, stakeUma: 991489.0981927107, costUsd: 0.7093994096401002 });
+  });
 });
