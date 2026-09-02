@@ -25,7 +25,10 @@ export default function App() {
     if (!changed) return;
     window.scrollTo({ top: 0, behavior: 'instant' });
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>('main h1')?.focus({ preventScroll: true });
+      const target = document.querySelector<HTMLElement>('main h1') ?? document.querySelector<HTMLElement>('main');
+      if (!target) return;
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [path]);

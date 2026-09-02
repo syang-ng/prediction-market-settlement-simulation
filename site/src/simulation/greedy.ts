@@ -35,6 +35,7 @@ export interface ScanMetrics {
   totalStakeUma: number;
   selectedVoterCount: number;
   selectedBaseCost: number;
+  /** Positions into the sorted arrays (scan order), not canonical indices; map back with sorted.order[position]. */
   selectedPositions: number[] | null;
 }
 
@@ -43,6 +44,7 @@ export interface TrialScenarioResult {
   selectedVoterCount: number;
   selectedStakeUma: number;
   selectedDirectCostUsd: number;
+  /** Positions into the sorted arrays (scan order), not canonical indices; map back with sorted.order[position]. */
   selectedPositions: number[] | null;
 }
 

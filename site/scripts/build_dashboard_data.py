@@ -59,6 +59,7 @@ SNAPSHOT_CACHE_KEYS = (
     "schema",
     "panelSha256",
     "voterSha256",
+    "roundWindowSeconds",
     "security",
     "costModel",
     "defaults",
@@ -395,6 +396,8 @@ def build_stake_snapshots(
     markets, candidates = loader.load()
     snapshots: list[dict[str, object]] = []
     for union in round_unions(markets, candidates):
+        if any(market.total_stake_uma != union.anchor.total_stake_uma for market in union.markets):
+            raise AssertionError(f"round {union.round} attempts disagree on cumulativeStakeAtRound")
         attempts: list[dict[str, object]] = []
         for market in union.markets:
             panel = panel_by_unit[market.unit_id]
@@ -444,11 +447,13 @@ def build_stake_snapshots(
         if not stakes or any(not math.isfinite(stake) or stake <= 0 for stake in stakes):
             raise AssertionError(f"round {snapshot['round']} has an invalid stake vector")
         anchor_timestamp = iso_to_timestamp(str(snapshot["anchorDisputeUtc"]))
+        window_end = iso_to_timestamp(str(snapshot["windowEndUtc"]))
         for attempt in snapshot["attempts"]:
-            if anchor_timestamp > iso_to_timestamp(panel_by_unit[attempt["unitId"]]["dispute_utc"]):
+            dispute_timestamp = iso_to_timestamp(panel_by_unit[attempt["unitId"]]["dispute_utc"])
+            if anchor_timestamp > dispute_timestamp:
                 raise AssertionError(f"round {snapshot['round']} anchor is not the earliest dispute")
-        if anchor_timestamp >= iso_to_timestamp(str(snapshot["windowEndUtc"])):
-            raise AssertionError(f"round {snapshot['round']} dispute arrives after its voting window")
+            if dispute_timestamp >= window_end:
+                raise AssertionError(f"round {snapshot['round']} dispute arrives after its voting window")
 
     payload: dict[str, object] = {
         "meta": meta

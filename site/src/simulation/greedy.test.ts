@@ -22,6 +22,17 @@ describe('hand-checked three-voter case', () => {
     expect(Array.from(sorted.order)).toEqual([0, 1, 2]);
   });
 
+  it('maps selected positions back to canonical indices through sorted.order', () => {
+    // η = 2/10 = 0.2, 1/40 = 0.025, 3/20 = 0.15 → sorted order [1, 2, 0]; coverage of 50 needs the first two.
+    const heterogeneousStakes = Float64Array.from([10, 40, 20]);
+    const heterogeneousCosts = Float64Array.from([2, 1, 3]);
+    const { results, sorted } = minimumCentRewards(heterogeneousStakes, heterogeneousCosts, 50, [1], true);
+    expect(Array.from(sorted.order)).toEqual([1, 2, 0]);
+    expect(results[0]).toMatchObject({ postedRewardUsd: 9, selectedVoterCount: 2, selectedStakeUma: 60 });
+    expect(results[0].selectedPositions).toEqual([0, 1]);
+    expect(results[0].selectedPositions?.map((position) => sorted.order[position])).toEqual([1, 2]);
+  });
+
   it('rejects a structurally infeasible batch and invalid inputs', () => {
     expect(() => minimumCentRewards(stakes, costs, 31, [1])).toThrow('structurally infeasible');
     expect(() => minimumCentRewards(Float64Array.from([10, 0]), Float64Array.from([1, 1]), 5, [1])).toThrow('finite and positive');

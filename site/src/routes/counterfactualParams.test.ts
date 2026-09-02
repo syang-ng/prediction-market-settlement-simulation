@@ -64,6 +64,7 @@ describe('sanitizers', () => {
     expect(sanitizeOi(1e6, 1)).toBe(1e6);
     expect(sanitizeOi(0.004, 1)).toBe(1);
     expect(sanitizeOi(NaN, 1)).toBe(1);
+    expect(sanitizeOi(1e308, 1)).toBe(1);
     expect(sanitizeSeed(5, 1)).toBe(5);
     expect(sanitizeSeed(-1, 1)).toBe(1);
     expect(sanitizeSeed(2 ** 53, 1)).toBe(1);

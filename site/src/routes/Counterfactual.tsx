@@ -50,7 +50,7 @@ function isoDay(iso: string): string {
   return iso.slice(0, 10);
 }
 
-/** Uncontrolled numeric field that applies on Enter or blur; `key={value}` resets it when the URL changes. */
+/** Uncontrolled numeric field that applies on Enter or blur; the DOM value follows the URL without remounting so focus survives a commit. */
 function NumberField({
   label,
   value,
@@ -69,21 +69,22 @@ function NumberField({
   onCommit: (value: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  // Resync the text when the URL-derived value changes, but never while the user is editing.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input && document.activeElement !== input) input.value = String(value);
+  }, [value]);
   const commit = () => {
     const input = inputRef.current;
     if (!input) return;
     const next = sanitize(Number(input.value.trim() === '' ? NaN : input.value));
-    if (next === value) {
-      input.value = String(value);
-      return;
-    }
-    onCommit(next);
+    input.value = String(next);
+    if (next !== value) onCommit(next);
   };
   return (
     <label className="cf-field">
       <span>{label}</span>
       <input
-        key={value}
         ref={inputRef}
         type="number"
         inputMode="decimal"
@@ -127,7 +128,7 @@ function ScenarioTable({ scenario }: { scenario: ScenarioSummary }) {
       </div>
       <div role="table" aria-label={`${scenarioLabels[scenario.name]} quantiles`}>
         <div className="cf-quantile-head" role="row">
-          <span />
+          <span role="columnheader" aria-label="Statistic" />
           {quantileKeys.map((key) => (
             <span role="columnheader" key={key}>{key}</span>
           ))}
@@ -214,14 +215,20 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
   useEffect(() => {
     if (!prepared || !model || oiUsd === null || seed === null || trials === null) return;
     const key = runKey(prepared.snapshot.round, oiUsd, seed, trials);
-    const handle = window.setTimeout(() => {
-      try {
-        setRun({ key, result: runCounterfactual(prepared, { oiUsd, seed, trials }, model), error: null });
-      } catch (reason) {
-        setRun({ key, result: null, error: reason instanceof Error ? reason.message : String(reason) });
-      }
-    }, 0);
-    return () => window.clearTimeout(handle);
+    let timeout = 0;
+    const frame = window.requestAnimationFrame(() => {
+      timeout = window.setTimeout(() => {
+        try {
+          setRun({ key, result: runCounterfactual(prepared, { oiUsd, seed, trials }, model), error: null });
+        } catch (reason) {
+          setRun({ key, result: null, error: reason instanceof Error ? reason.message : String(reason) });
+        }
+      }, 0);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
   }, [prepared, model, oiUsd, seed, trials]);
 
   if (loadError) return <main className="load-state"><strong>Unable to load the stake snapshots.</strong><span>{loadError}</span></main>;
@@ -339,7 +346,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
 
         <section className="cf-card" aria-labelledby="cf-requirement">
           <div className="cf-card-head"><h2 id="cf-requirement">Requirement</h2><span className="data-label simulated">Counterfactual</span></div>
-          <div className={`cf-card-body${computing ? ' cf-computing' : ''}`}>
+          <div className={`cf-card-body${computing ? ' cf-computing' : ''}`} aria-busy={computing}>
             {requirement ? (
               <>
                 <div className="exposure-visual cf-chain">

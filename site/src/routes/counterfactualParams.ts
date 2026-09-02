@@ -22,7 +22,7 @@ function numberParam(params: URLSearchParams, key: string): number {
 export function sanitizeOi(raw: number, fallback: number): number {
   if (!Number.isFinite(raw) || raw <= 0) return fallback;
   const rounded = Math.round(raw * 100) / 100;
-  return rounded > 0 ? rounded : fallback;
+  return Number.isFinite(rounded) && rounded > 0 ? rounded : fallback;
 }
 
 /** Non-negative safe integer; otherwise the fallback. */
