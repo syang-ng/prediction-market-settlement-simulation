@@ -151,6 +151,7 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
 .market-orb strong, .load-orb strong { margin-top: 7px; font: 600 clamp(21.5px, 1.9vw, 29.5px) var(--font-sans); }
 .operator { color: var(--sage); font-size: 25px; }
 .parameter-stack { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font: 13px var(--font-mono); text-align: center; }
+.parameter-stack .parameter-lead { color: var(--ink); font: 500 clamp(19px, 1.5vw, 23px) var(--font-mono); }
 .capacity-visual { display: flex; flex-direction: column; gap: 22px; }
 .capacity-row { display: grid; grid-template-columns: 125px 1fr 115px; gap: 14px; align-items: center; color: var(--muted); font-size: 14.5px; }
 .capacity-row > div { height: 10px; overflow: hidden; background: #e5e4df; }
@@ -384,7 +385,6 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .cf-page > * { max-width: 1260px; margin-left: auto; margin-right: auto; }
 .cf-page h1 { max-width: 900px; margin: 14px auto 18px; font: 600 clamp(39.5px, 4.6vw, 66px)/1.04 var(--font-sans); letter-spacing: -.02em; }
 .cf-page h1:focus { outline: none; }
-.cf-standfirst { max-width: 760px; margin: 0 auto 12px; color: var(--muted); font-size: clamp(18px, 1.4vw, 21.5px); line-height: 1.6; }
 .cf-deviations { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 auto 30px; padding: 0; list-style: none; }
 .cf-deviations li { padding: 5px 8px; border: 1px solid rgba(148,119,96,.35); color: var(--umber); font-size: 13px; }
 .cf-card { margin-top: 18px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--panel); }
@@ -473,7 +473,7 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 
 /* Counterfactual page header: align the title block with the 1260px content column. */
 .cf-page > .eyebrow { display: block; }
-.cf-page > h1, .cf-page > .cf-standfirst { margin-left: max(0px, calc((100% - 1260px) / 2)); }
+.cf-page > h1 { margin-left: max(0px, calc((100% - 1260px) / 2)); }
 
 /* Human-facing figures stay in Outfit; tabular digits keep columns aligned. */
 .hero-summary-table dd, .market-orb strong, .load-orb strong, .reward-output strong, .protocol-footer strong, .capacity-row strong, .voter-cost strong, .voter-cost small, .sample-row span, .comparison-row span, .comparison-row strong, .market-table td, .quantile-row span, .detail-grid strong, .source-coverage strong, .cf-facts strong, .cf-headline strong, .cf-quantile-row span, .cf-shares span, .cf-caption { font-variant-numeric: tabular-nums; }
