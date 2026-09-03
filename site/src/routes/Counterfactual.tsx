@@ -130,7 +130,6 @@ function ScenarioTable({ scenario, rho }: { scenario: ScenarioSummary; rho: numb
   const usd = (value: number | null) => formatUsd(value);
   const count = (value: number | null) => formatCount(value);
   const uma = (value: number | null) => formatUma(value);
-  const ratio = (value: number | null) => formatRatio(value);
   return (
     <section aria-label={`${scenarioLabels[scenario.name]} results`}>
       <div className="cf-scenario-title">
@@ -148,7 +147,6 @@ function ScenarioTable({ scenario, rho }: { scenario: ScenarioSummary; rho: numb
         <QuantileLine label="Selected voters" values={scenario.selectedVoterCount} format={count} />
         <QuantileLine label="Selected stake" values={scenario.selectedStakeUma} format={uma} />
         <QuantileLine label="Selected direct cost" values={scenario.selectedDirectCost} format={usd} />
-        <QuantileLine label="Reward ÷ direct cost" values={scenario.rewardToCost} format={ratio} />
       </div>
       <div className="cf-shares">
         {scenario.budgetCapShares.map((item) => (
@@ -437,6 +435,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
           <li>Only the open interest is hypothetical. The UMA price is the anchor dispute’s stored Coinbase hourly price; stakes are the stored revealer stakes.</li>
           <li>Security follows the frozen data: <Formula><msub><mi>r</mi><mtext>USD</mtext></msub><mo>=</mo><mi>κ</mi><mo>·</mo><mi>OI</mi><mo>/</mo><mi>α</mi></Formula> with <Assign sym="α" value={security.corruptionThreshold} /> and <Assign sym="κ" value={security.attackCaptureFraction} />, <Formula><msub><mi>r</mi><mtext>UMA</mtext></msub><mo>=</mo><msub><mi>r</mi><mtext>USD</mtext></msub><mo>/</mo><msub><mi>P</mi><mtext>UMA</mtext></msub></Formula>, slash fraction {security.slashFraction}. Feasibility uses the simulator’s one-ulp coverage rule.</li>
           <li>Costs follow the same model as the main simulation (Beta(2, 8), support <Formula><mo>[</mo><mn>0.25</mn><mi>μ</mi><mo>,</mo><mn>4</mn><mi>μ</mi><mo>]</mo></Formula>), drawn at <Assign sym="ρ" value={formatRho(view.rho)} />{view.rho === calibratedRho ? ', the calibrated value' : `, deviating from the calibrated ${formatRho(calibratedRho)}`}. Correlated voters share one common draw with probability <span className="no-break"><Formula><msqrt><mi>ρ</mi></msqrt></Formula>,</span> so a <Formula><msqrt><mi>ρ</mi></msqrt></Formula> share of them hold literally the same cost; the stream layout does not depend on <Sym>ρ</Sym>, so one seed gives the same underlying draw at every setting. The browser draws them with a seeded PRNG, so quantiles agree with the Python engine in distribution, not draw by draw; the greedy construction and cent-grid search are verified identical on shared inputs.</li>
+          <li>Rewards use the paper’s single-market greedy construction (Algorithm 1), the same one behind every Overview result. Voters are ordered by break-even rate <Formula><msub><mi>η</mi><mi>i</mi></msub><mo>=</mo><msub><mi>c</mi><mi>i</mi></msub><mo>/</mo><msub><mi>σ</mi><mi>i</mi></msub></Formula>, a voter enters at full stake when its pool share covers its cost, skipped voters do not stop the scan, and binary search on the one-cent grid returns the smallest pool the scan certifies. The selected snapshot is treated as one single-market batch; the multi-market protected construction is not used here. See <a href="#/method">Method</a> for both constructions.</li>
           <li>Not reported: the continuous reward bracket and rounding overhead, which the site does not show elsewhere.</li>
         </ol>
       </main>
