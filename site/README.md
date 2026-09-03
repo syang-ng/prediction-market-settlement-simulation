@@ -61,3 +61,14 @@ same one-cent minimum-reward search, ported to TypeScript under
 ```bash
 python3 site/scripts/export_counterfactual_fixture.py
 ```
+
+## Typography
+
+The site self-hosts two faces from `app/fonts/`: Outfit (variable, Latin
+subset) for all text and human-facing figures, and IBM Plex Mono (500/600,
+Latin subset) for technical values such as parameters, identifiers, gate
+labels, formulas, and chart axis labels. Both are SIL Open Font License 1.1;
+the license texts sit beside the files. The files are the Latin builds from
+the fontsource packages `@fontsource-variable/outfit` 5.3.0 and
+`@fontsource/ibm-plex-mono` 5.3.0, copied once rather than installed. No
+font is fetched from a third-party host at runtime.
