@@ -99,7 +99,8 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
 .data-label.simulated { color: var(--umber); background: rgba(148,119,96,.04); }
 
 .section-intro { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(250px, .7fr); gap: 8vw; align-items: end; max-width: 1260px; margin: 0 auto 34px; }
-.section-intro h2 { max-width: 780px; margin: 11px 0 0; font: 600 clamp(37.5px, 4.2vw, 59.5px)/1.04 var(--font-sans); letter-spacing: -.02em; }
+.section-intro h1, .section-intro h2 { max-width: 780px; margin: 11px 0 0; font: 600 clamp(37.5px, 4.2vw, 59.5px)/1.04 var(--font-sans); letter-spacing: -.02em; }
+.section-intro h1:focus { outline: none; }
 .section-intro > p { margin: 0; color: var(--muted); font-size: 18px; line-height: 1.65; }
 .section-intro.inverse .eyebrow { color: var(--slate); }
 .section-intro.inverse > p { color: var(--muted); }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 
-export type RoutePath = '/' | '/counterfactual';
+export type RoutePath = '/' | '/counterfactual' | '/method';
 
 export interface HashRoute {
   path: RoutePath;
@@ -16,12 +16,15 @@ const LEGACY_DASHBOARD_KEYS = ['attempt', 'request', 'market', 'scenario'] as co
 
 /** A hash that does not start with "#/" is a page anchor on the default route. */
 export function parseHash(hash: string): HashRoute {
+  // "#method" was the in-page anchor before Method became its own tab; keep old links working.
+  if (hash === '#method') return { path: '/method', params: new URLSearchParams() };
   if (!hash.startsWith('#/')) return { path: '/', params: new URLSearchParams() };
   const body = hash.slice(2);
   const queryStart = body.indexOf('?');
   const rawPath = (queryStart === -1 ? body : body.slice(0, queryStart)).replace(/\/+$/, '');
   const params = new URLSearchParams(queryStart === -1 ? '' : body.slice(queryStart + 1));
-  return { path: rawPath === 'counterfactual' ? '/counterfactual' : '/', params };
+  const path: RoutePath = rawPath === 'counterfactual' ? '/counterfactual' : rawPath === 'method' ? '/method' : '/';
+  return { path, params };
 }
 
 export function formatHash(path: RoutePath, params: URLSearchParams): string {

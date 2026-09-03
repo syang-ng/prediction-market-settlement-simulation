@@ -16,6 +16,12 @@ describe('parseHash', () => {
     expect(route.params.get('oi')).toBe('1000000');
   });
 
+  it('routes the method tab and the legacy #method anchor', () => {
+    expect(parseHash('#/method').path).toBe('/method');
+    expect(parseHash('#method').path).toBe('/method');
+    expect(parseHash('#methods').path).toBe('/');
+  });
+
   it('tolerates trailing slashes, keeps default-route queries, and falls back for unknown routes', () => {
     expect(parseHash('#/counterfactual/').path).toBe('/counterfactual');
     expect(parseHash('#/?attempt=em_1').params.get('attempt')).toBe('em_1');

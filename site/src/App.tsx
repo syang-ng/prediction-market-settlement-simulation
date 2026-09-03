@@ -3,11 +3,13 @@
 import { useEffect, useRef } from 'react';
 import Dashboard from './Dashboard';
 import CounterfactualPage from './routes/Counterfactual';
+import MethodPage from './routes/Method';
 import { useHashRoute, type RoutePath } from './useHashRoute';
 
 const titles: Record<RoutePath, string> = {
   '/': 'Interactive Demo · Sufficient Dispute Rewards',
   '/counterfactual': 'Counterfactual Open Interest · Sufficient Dispute Rewards',
+  '/method': 'Method & Data · Sufficient Dispute Rewards',
 };
 
 export default function App() {
@@ -35,5 +37,6 @@ export default function App() {
 
   if (!route) return <main className="load-state" aria-busy="true" />;
   if (route.path === '/counterfactual') return <CounterfactualPage params={route.params} setParams={route.setParams} />;
+  if (route.path === '/method') return <MethodPage />;
   return <Dashboard />;
 }
