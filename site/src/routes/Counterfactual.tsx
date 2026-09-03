@@ -245,8 +245,6 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
   const requirement = result?.requirement ?? null;
   const scenarios = result?.scenarios ?? null;
   const highlighted = scenarios ? scenarios[view.scenario] : null;
-  const historicalOi = snapshot.attempts.reduce((sum, attempt) => sum + attempt.oiUsd, 0);
-  const largestHistoricalOi = snapshot.attempts.reduce((max, attempt) => Math.max(max, attempt.oiUsd), 0);
   const maxSecurable = maxSecurableOiUsd(snapshot, security);
   const revealerShare = snapshot.cumulativeStakeAtRoundUma > 0 ? snapshot.unionStakeUma / snapshot.cumulativeStakeAtRoundUma : 0;
 
@@ -294,7 +292,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
               <button type="button" className="cf-step" onClick={() => selectRound(index + 1)} disabled={index === snapshots.length - 1}>Later round →</button>
             </div>
             <p className="cf-caption">
-              <strong>DVM round {snapshot.round}</strong> · voting window {formatWindow(snapshot.windowStartUtc, snapshot.windowEndUtc)} · anchor dispute {formatDay(snapshot.anchorDisputeUtc)} · {snapshot.attempts.length} historical attempt{snapshot.attempts.length === 1 ? '' : 's'} in this round
+              <strong>DVM round {snapshot.round}</strong> · voting window {formatWindow(snapshot.windowStartUtc, snapshot.windowEndUtc)} · anchor dispute {formatDay(snapshot.anchorDisputeUtc)}
             </p>
           </div>
           <div className="cf-inputs">
@@ -324,23 +322,13 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
           <div className="cf-card-body">
             <div className="cf-facts">
               <div><span>DVM round</span><strong>{snapshot.round}</strong><small>{formatWindow(snapshot.windowStartUtc, snapshot.windowEndUtc)}</small></div>
-              <div><span>Anchor dispute</span><strong>{formatDay(snapshot.anchorDisputeUtc)}</strong><small>attempt #{snapshot.anchorRank}</small></div>
+              <div><span>Anchor dispute</span><strong>{formatDay(snapshot.anchorDisputeUtc)}</strong><small>earliest dispute voted in this round</small></div>
               <div><span>UMA price</span><strong>{formatUsd(snapshot.umaPriceUsd)}</strong><small>{snapshot.umaPriceMethod.replaceAll('_', ' ')}</small></div>
               <div><span>Positive-stake voters</span><strong>{snapshot.voterCount.toLocaleString()}</strong><small>revealers, not all stakers</small></div>
               <div><span>Available stake</span><strong>{formatUma(snapshot.unionStakeUma, false)}</strong><small>{formatUsd(snapshot.unionStakeUma * snapshot.umaPriceUsd)} at the anchor price</small></div>
               <div><span>Share of round stake</span><strong>{formatPercent(revealerShare)}</strong><small>of {formatUma(snapshot.cumulativeStakeAtRoundUma)} staked in the round</small></div>
               <div><span>Max securable OI</span><strong>{formatUsd(maxSecurable, true)}</strong><small>available stake × price × α</small></div>
-              <div><span>Historical OI in this round</span><strong>{formatUsd(historicalOi, true)}</strong><small>largest single attempt {formatUsd(largestHistoricalOi, true)}</small></div>
             </div>
-            <ul className="cf-attempts" aria-label="Historical attempts in this round">
-              {snapshot.attempts.map((attempt) => (
-                <li key={attempt.unitId}>
-                  <a href={`#/?attempt=${encodeURIComponent(attempt.unitId)}`}><span>#{attempt.rank}</span>{attempt.question}</a>
-                  <span>{formatUsd(attempt.oiUsd, true)} OI</span>
-                  <span>{attempt.feasible ? `${formatUsd(attempt.baselineRewardP50Usd)} baseline p50` : 'short on stake'}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
 
