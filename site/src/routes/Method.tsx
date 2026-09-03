@@ -1,7 +1,7 @@
 'use client';
 
 import SiteHeader from '../components/SiteHeader';
-import { Assign, Formula } from '../components/math';
+import { Assign, Formula, Sym } from '../components/math';
 import type { DashboardData } from '../types';
 import { useDashboardData } from '../useDashboardData';
 
@@ -17,6 +17,20 @@ function Methods({ data }: { data: DashboardData }) {
         <article><span className="method-number">02</span><h3>Correct exposure</h3><p>For NegRisk, every active component condition is summed once at the anchor block. Signed balances are retained; the original condition OI remains an audit field.</p><div className="method-formula"><Formula block><msub><mi>OI</mi><mi>u</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>OI</mi><mi>k</mi></msub><mo>(</mo><msub><mtext>block</mtext><mi>u</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo></Formula></div></article>
         <article><span className="method-number">03</span><h3>Draw costs</h3><p>Low, baseline, and high have means $0.20, $1, and $4. Each uses the same right-skewed Beta(2, 8) shape, support <Formula><mo>[</mo><mn>0.25</mn><mi>μ</mi><mo>,</mo><mn>4</mn><mi>μ</mi><mo>]</mo></Formula>, and within-unit correlation <Assign sym="ρ" value={data.meta.costCorrelation} />.</p><div className="method-formula"><Formula block><msub><mi>c</mi><mrow><mi>i</mi><mi>u</mi></mrow></msub><mo>=</mo><msub><mi>μ</mi><mi>s</mi></msub><mo>(</mo><mn>0.25</mn><mo>+</mo><mn>3.75</mn><msub><mi>X</mi><mrow><mi>i</mi><mi>u</mi></mrow></msub><mo>)</mo></Formula></div></article>
         <article><span className="method-number">04</span><h3>Find reward</h3><p>All observed positive-stake revealers are candidates. For each realized cost vector, the paper’s greedy sufficient construction is combined with binary search on a one-cent reward grid.</p><div className="method-formula"><Formula block><mi>min</mi><mspace width="0.2em" /><mi>R</mi><mo>:</mo><msubsup><mi>W</mi><mi>u</mi><mi>G</mi></msubsup><mo>(</mo><mi>R</mi><mo>)</mo><mo>≥</mo><msub><mi>r</mi><mi>u</mi></msub></Formula></div></article>
+      </div>
+      <div className="construction-grid" aria-label="Reward constructions">
+        <article>
+          <span className="construction-tag is-used">Used for every result on this site</span>
+          <h3>Single-market greedy construction</h3>
+          <p>Paper §5.4, Algorithm 1. Each attempt is its own batch. Voters are ordered by break-even rate <Formula><msub><mi>η</mi><mi>i</mi></msub><mo>=</mo><msub><mi>c</mi><mi>i</mi></msub><mo>/</mo><msub><mi>σ</mi><mi>i</mi></msub></Formula> and scanned once: a voter enters with its full stake when its share of the pool covers its cost, and is otherwise skipped while the scan continues. The result is a pure-strategy equilibrium that passes admission once the committed stake <Formula><msup><mi>W</mi><mi>G</mi></msup></Formula> reaches <Sym>r</Sym>. Since <Formula><msup><mi>W</mi><mi>G</mi></msup></Formula> is nondecreasing in <Sym>R</Sym>, a binary search on the one-cent grid returns the smallest pool the scan certifies: a sufficient reward, not a global optimum. Both capacity runs and the Counterfactual tab use it.</p>
+          <div className="method-formula"><Formula block><mtext>enter</mtext><mspace width="0.35em" /><mi>i</mi><mspace width="0.35em" /><mtext>if</mtext><mspace width="0.4em" /><mfrac><mrow><mi>R</mi><mspace width="0.1em" /><msub><mi>σ</mi><mi>i</mi></msub></mrow><mrow><msup><mi>W</mi><mi>G</mi></msup><mo>+</mo><msub><mi>σ</mi><mi>i</mi></msub></mrow></mfrac><mo>≥</mo><msub><mi>c</mi><mi>i</mi></msub></Formula></div>
+        </article>
+        <article>
+          <span className="construction-tag">Paper robustness check · not used on this site</span>
+          <h3>Multi-market protected construction</h3>
+          <p>Paper §5.5 and Appendix E. Attempts resolved in one DVM round form a batch <Sym>S</Sym>. Voters holding at least <Sym>θ</Sym> in stake are protected, and <Sym>θ</Sym> is lowered until their stake covers the batch requirement <Formula><mi>L</mi><mo>(</mo><mi>S</mi><mo>)</mo><mo>=</mo><mo>∑</mo><msub><mi>r</mi><mi>j</mi></msub></Formula>. Each protected voter commits its full stake to every market in the batch, and each pool pays the worst protected cost-to-stake ratio under maximum dilution, so the batch stays live whatever the other voters do. This commits more stake and pays more than the greedy scan, but certifies the whole round at once. It is implemented in <code>experiments/robust_protected_layer_simulation.py</code>; its results are not shown on this site.</p>
+          <div className="method-formula"><Formula block><msubsup><mi>R</mi><mi>j</mi><mtext>robust</mtext></msubsup><mo>=</mo><msub><mi>B</mi><mtext>total</mtext></msub><mo>·</mo><munder><mi>max</mi><mrow><mi>i</mi><mo>∈</mo><msub><mi>H</mi><mi>θ</mi></msub></mrow></munder><mspace width="0.15em" /><mfrac><msub><mi>c</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>σ</mi><mi>i</mi></msub></mfrac></Formula></div>
+        </article>
       </div>
       <div className="truth-callout"><strong>Two capacity runs</strong><p>Full release treats every attempt independently. The rolling run locks admitted pro-rata security load from arrival until DVM resolution plus {data.meta.reviewWindowDays} days; failed arrivals are recorded once and not retried.</p></div>
       <div className="source-coverage" aria-label="Oracle deployment coverage">
