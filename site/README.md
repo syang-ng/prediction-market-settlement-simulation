@@ -67,8 +67,12 @@ python3 site/scripts/export_counterfactual_fixture.py
 The site self-hosts two faces from `app/fonts/`: Outfit (variable, Latin
 subset) for all text and human-facing figures, and IBM Plex Mono (500/600,
 Latin subset) for technical values such as parameters, identifiers, gate
-labels, formulas, and chart axis labels. Both are SIL Open Font License 1.1;
-the license texts sit beside the files. The files are the Latin builds from
+labels, and chart axis labels. Formulas are native MathML (no library) set in a
+self-hosted Noto Sans Math subset (`noto-sans-math-subset.woff2`, about 35 KB,
+built with fontTools `pyftsubset` from `@fontsource/noto-sans-math` 5.3.0,
+keeping the MATH table); the same font is the fallback for symbols Outfit and
+Plex Mono lack, such as Greek letters, ≤, and arrows. All three faces are SIL
+Open Font License 1.1; the license texts sit beside the files. The files are the Latin builds from
 the fontsource packages `@fontsource-variable/outfit` 5.3.0 and
 `@fontsource/ibm-plex-mono` 5.3.0, copied once rather than installed. No
 font is fetched from a third-party host at runtime.

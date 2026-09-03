@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import SiteHeader from './components/SiteHeader';
+import { Assign, Formula } from './components/math';
 import { loadDashboardData } from './useDashboardData';
 import { formatCount, formatPercent, formatRatio, formatUma, formatUsd, shortId } from './lib';
 import type { DashboardData, Market, OracleVariant, QuantileKey, Quantiles, ScenarioName } from './types';
@@ -176,13 +177,13 @@ function ProcessSimulator({
             <p>{processSteps[step].copy}</p>
             {step === 0 && <p className="stage-note">{market.negRisk ? `Grouped by event and DVM round: ${market.componentCount} source requests share one reward pool.` : 'One ordinary binary request is one settlement attempt.'}</p>}
             {step === 1 && <p className="stage-note">OI scope: {market.oiScope}. {market.negRisk ? `${market.bundleConditionCount} active event conditions are summed once.` : 'The disputed condition is used directly.'}</p>}
-            {step === 2 && <p className="stage-formula">r = OI / (0.50 × P<sub>UMA</sub>) = {formatUma(market.securityLoadUma)}</p>}
+            {step === 2 && <p className="stage-formula"><Formula><mi>r</mi><mo>=</mo><mi>OI</mi><mo>/</mo><mo>(</mo><mn>0.50</mn><mo>×</mo><msub><mi>P</mi><mtext>UMA</mtext></msub><mo>)</mo><mo>=</mo><mtext>{formatUma(market.securityLoadUma)}</mtext></Formula></p>}
             {step === 3 && (market.feasible
               ? <p className="stage-decision admit">✓ Admit: candidate capacity is {formatRatio(market.capacityRatio)} the required load.</p>
               : <p className="stage-decision reject">× Insufficient observed capacity; a larger reward cannot create stake.</p>)}
             {step === 4 && <p className="stage-note">One reproducible cost draw is shown. Formal quantiles use {trials.toLocaleString()} draws per unit and scenario.</p>}
-            {step === 5 && <p className="stage-formula">sort by cᵢ/qᵢ · scan · skip non-entrants · continue to coverage</p>}
-            {step === 6 && <p className="stage-formula">minimum R such that W<sub>G</sub>(R) ≥ r · exact $0.01 grid</p>}
+            {step === 5 && <p className="stage-formula">sort by <Formula><msub><mi>c</mi><mi>i</mi></msub><mo>/</mo><msub><mi>q</mi><mi>i</mi></msub></Formula> · scan · skip non-entrants · continue to coverage</p>}
+            {step === 6 && <p className="stage-formula">minimum <Formula><mi>R</mi></Formula> such that <Formula><msub><mi>W</mi><mi>G</mi></msub><mo>(</mo><mi>R</mi><mo>)</mo><mo>≥</mo><mi>r</mi></Formula> · exact $0.01 grid</p>}
             {step === 7 && <p className="stage-decision admit">✓ Verification returns the correct result; no accuracy error is simulated.</p>}
           </div>
 
@@ -198,7 +199,7 @@ function ProcessSimulator({
               <div className="exposure-visual">
                 <div className="market-orb"><span>corrected OI</span><strong>{formatUsd(market.oiUsd, true)}</strong></div>
                 <div className="operator">÷</div>
-                <div className="parameter-stack"><span>α = 0.50</span><span>UMA = {formatUsd(market.umaPriceUsd)}</span></div>
+                <div className="parameter-stack"><span><Assign sym="α" value="0.50" /></span><span><Formula><msub><mi>P</mi><mtext>UMA</mtext></msub><mo>=</mo><mtext>{formatUsd(market.umaPriceUsd)}</mtext></Formula></span></div>
                 <div className="operator">→</div>
                 <div className="load-orb"><span>required</span><strong>{formatUma(market.securityLoadUma)}</strong></div>
               </div>
@@ -379,7 +380,7 @@ function DetailDrawer({ market, scenario, open, onClose }: { market: Market; sce
 
         <section className="drawer-section">
           <div className="drawer-section-title"><h3>Full-release simulation</h3><span className="data-label simulated">Simulated</span></div>
-          <div className="assumption-line"><span>cost support {formatUsd(result.costLowerUsd)}–{formatUsd(result.costUpperUsd)}</span><span>mean {formatUsd(result.meanCostUsd)}</span><span>ρ = 0.80</span><span>Beta(2, 8)</span></div>
+          <div className="assumption-line"><span>cost support {formatUsd(result.costLowerUsd)}–{formatUsd(result.costUpperUsd)}</span><span>mean {formatUsd(result.meanCostUsd)}</span><span><Assign sym="ρ" value="0.80" /></span><span>Beta(2, 8)</span></div>
           {!market.feasible ? (
             <div className="no-certificate"><strong>No sufficient reward reported</strong><p>All observed positive-stake revealers together do not cover the required load.</p></div>
           ) : (

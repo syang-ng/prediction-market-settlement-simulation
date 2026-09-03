@@ -1,5 +1,6 @@
 import { useId, useMemo } from 'react';
 import { formatUsd } from '../lib';
+import { Sym } from './math';
 import { maxSecurableOiUsd } from '../routes/counterfactualParams';
 import type { SecurityConstants, StakeSnapshot } from '../types';
 
@@ -91,7 +92,7 @@ export default function StakeTimeline({
         ))}
       </svg>
       <figcaption>
-        Each point is one DVM round: union revealer stake × anchor UMA price × α. Points above the dashed line are stake-feasible at the current open interest. Select a round with the slider, the date field, or by clicking a point.
+        Each point is one DVM round: union revealer stake × anchor UMA price × <Sym>α</Sym>. Points above the dashed line are stake-feasible at the current open interest. Select a round with the slider, the date field, or by clicking a point.
       </figcaption>
     </figure>
   );

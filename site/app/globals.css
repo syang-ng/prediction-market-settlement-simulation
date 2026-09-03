@@ -20,6 +20,13 @@
   font-display: swap;
   src: url('./fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Noto Sans Math';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/noto-sans-math-subset.woff2') format('woff2');
+}
 
 :root {
   --ink: #303436;
@@ -35,8 +42,9 @@
   --red: #8f615c;
   --line: rgba(48, 52, 54, 0.15);
   --line-strong: rgba(48, 52, 54, 0.28);
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Outfit', 'Noto Sans Math', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Noto Sans Math', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-math: 'Noto Sans Math', 'STIX Two Math', 'Cambria Math', math;
 }
 
 * { box-sizing: border-box; }
@@ -233,7 +241,7 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
 .method-number { color: var(--slate); font: 600 12px var(--font-mono); }
 .method-grid h3 { margin: 30px 0 10px; font: 600 25px var(--font-sans); }
 .method-grid p { min-height: 108px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.62; }
-.method-grid code { display: block; margin-top: 17px; padding: 10px; border-left: 2px solid var(--sage); color: var(--slate); background: rgba(127,147,140,.055); font: 500 14.5px var(--font-mono); }
+.method-grid .method-formula { display: block; margin-top: 17px; padding: 12px 10px; border-left: 2px solid var(--sage); color: var(--slate); background: rgba(127,147,140,.055); font-size: 17px; }
 .truth-callout { display: grid; grid-template-columns: 185px 1fr; gap: 34px; max-width: 1260px; margin: 18px auto; padding: 17px 20px; border-left: 2px solid var(--umber); background: rgba(148,119,96,.055); }
 .truth-callout strong { color: var(--umber); font: 600 21.5px var(--font-sans); }
 .truth-callout p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.62; }
@@ -405,7 +413,6 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .cf-inputs .cf-reset { grid-column: span 1; }
 .cf-inputs .cf-reset .cf-step { width: 100%; min-height: 44px; }
 .cf-field > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 13px; font-weight: 750; text-transform: uppercase; letter-spacing: .09em; }
-.cf-field > span .glyph { text-transform: none; letter-spacing: 0; }
 .cf-field input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: var(--panel); }
 .cf-field small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
 .cf-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
@@ -481,3 +488,9 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 
 /* Human-facing figures stay in Outfit; tabular digits keep columns aligned. */
 .hero-summary-table dd, .market-orb strong, .load-orb strong, .reward-output strong, .protocol-footer strong, .capacity-row strong, .voter-cost strong, .voter-cost small, .sample-row span, .comparison-row span, .comparison-row strong, .market-table td, .quantile-row span, .detail-grid strong, .source-coverage strong, .cf-facts strong, .cf-headline strong, .cf-quantile-row span, .cf-shares span, .cf-caption { font-variant-numeric: tabular-nums; }
+
+/* Formulas: native MathML in the self-hosted math font, immune to label casing and tracking. */
+math { font-family: var(--font-math); font-size: 1em; font-weight: 400; letter-spacing: normal; text-transform: none; }
+math[display="block"] { margin: 0; text-align: left; }
+/* Keeps a formula and its trailing punctuation on one line. */
+.no-break { white-space: nowrap; }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import RewardEcdf from '../components/RewardEcdf';
 import SiteHeader from '../components/SiteHeader';
 import StakeTimeline from '../components/StakeTimeline';
+import { Assign, Formula, Sym } from '../components/math';
 import { formatCount, formatPercent, formatRatio, formatUma, formatUsd } from '../lib';
 import { SCENARIO_ORDER, prepareSnapshot, runCounterfactual } from '../simulation/counterfactual';
 import type { CounterfactualResult, ModelConstants, ScenarioSummary } from '../simulation/types';
@@ -134,7 +135,7 @@ function ScenarioTable({ scenario, rho }: { scenario: ScenarioSummary; rho: numb
     <section aria-label={`${scenarioLabels[scenario.name]} results`}>
       <div className="cf-scenario-title">
         <h3>{scenarioLabels[scenario.name]}</h3>
-        <span>cost support {formatUsd(scenario.costLowerUsd)}–{formatUsd(scenario.costUpperUsd)} · ρ = {formatRho(rho)} · Beta(2, 8)</span>
+        <span>cost support {formatUsd(scenario.costLowerUsd)}–{formatUsd(scenario.costUpperUsd)} · <Assign sym="ρ" value={formatRho(rho)} /> · Beta(2, 8)</span>
       </div>
       <div role="table" aria-label={`${scenarioLabels[scenario.name]} quantiles`}>
         <div className="cf-quantile-head" role="row">
@@ -192,8 +193,8 @@ function DrawIllustration({
       {distinctCostCount !== null && (
         <p className="cf-draw-ties">
           <strong>{distinctCostCount.toLocaleString()}</strong> distinct cost value{distinctCostCount === 1 ? '' : 's'} across{' '}
-          {candidateCount.toLocaleString()} voters · ρ = {formatRho(rho)}
-          {rho > 0 && <> · at ρ = 0 all {candidateCount.toLocaleString()} differ</>}
+          {candidateCount.toLocaleString()} voters · <Assign sym="ρ" value={formatRho(rho)} />
+          {rho > 0 && <> · at <Assign sym="ρ" value="0" /> all {candidateCount.toLocaleString()} differ</>}
         </p>
       )}
       <div className="reward-output">
@@ -293,7 +294,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
           <li>Population: union of the round’s revealers</li>
           <li>Open interest: hypothetical</li>
           <li>Cost draws: seeded browser PRNG</li>
-          {view.rho !== calibratedRho && <li>Cost correlation: ρ = {formatRho(view.rho)} (calibrated {formatRho(calibratedRho)})</li>}
+          {view.rho !== calibratedRho && <li>Cost correlation: <Assign sym="ρ" value={formatRho(view.rho)} /> (calibrated {formatRho(calibratedRho)})</li>}
         </ul>
 
         <section className="cf-card" aria-labelledby="cf-when">
@@ -331,7 +332,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
             <NumberField label="Open interest (USD)" value={view.oiUsd} hint="hypothetical market size" min={0.01} step="any" sanitize={(raw) => sanitizeOi(raw, view.oiUsd)} onCommit={(value) => update({ oiUsd: value })} />
             <NumberField label="Seed" value={view.seed} hint="same seed, same draws" min={0} step={1} sanitize={(raw) => sanitizeSeed(raw, view.seed)} onCommit={(value) => update({ seed: value })} />
             <NumberField label="Trials" value={view.trials} hint={`1 to ${meta.defaults.maxTrials.toLocaleString()} cost draws`} min={1} step={1} sanitize={(raw) => sanitizeTrials(raw, view.trials, meta.defaults.maxTrials)} onCommit={(value) => update({ trials: value })} />
-            <NumberField label={<>Cost correlation <span className="glyph">ρ</span></>} value={view.rho} hint={`calibrated ${formatRho(calibratedRho)} · 0 independent, 1 identical`} min={0} max={1} step={0.01} sanitize={(raw) => sanitizeRho(raw, view.rho)} onCommit={(value) => update({ rho: value })} />
+            <NumberField label={<>Cost correlation <Sym>ρ</Sym></>} value={view.rho} hint={`calibrated ${formatRho(calibratedRho)} · 0 independent, 1 identical`} min={0} max={1} step={0.01} sanitize={(raw) => sanitizeRho(raw, view.rho)} onCommit={(value) => update({ rho: value })} />
             <fieldset className="scenario-control cf-field">
               <legend>Highlight scenario</legend>
               <div>
@@ -350,7 +351,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
               >
                 Reset to defaults
               </button>
-              <small>latest round, $1,000,000, seed {meta.defaults.seed}, {meta.defaults.trials.toLocaleString()} trials, ρ = {formatRho(calibratedRho)}</small>
+              <small>latest round, $1,000,000, seed {meta.defaults.seed}, {meta.defaults.trials.toLocaleString()} trials, <Assign sym="ρ" value={formatRho(calibratedRho)} /></small>
             </div>
           </div>
         </section>
@@ -365,7 +366,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
               <div><span>Positive-stake voters</span><strong>{snapshot.voterCount.toLocaleString()}</strong><small>revealers, not all stakers</small></div>
               <div><span>Available stake</span><strong>{formatUma(snapshot.unionStakeUma, false)}</strong><small>{formatUsd(snapshot.unionStakeUma * snapshot.umaPriceUsd)} at the anchor price</small></div>
               <div><span>Share of round stake</span><strong>{formatPercent(revealerShare)}</strong><small>of {formatUma(snapshot.cumulativeStakeAtRoundUma)} staked in the round</small></div>
-              <div><span>Max securable OI</span><strong>{formatUsd(maxSecurable, true)}</strong><small>available stake × price × α</small></div>
+              <div><span>Max securable OI</span><strong>{formatUsd(maxSecurable, true)}</strong><small>available stake × price × <Sym>α</Sym></small></div>
             </div>
           </div>
         </section>
@@ -378,7 +379,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                 <div className="exposure-visual cf-chain">
                   <div className="market-orb"><span>hypothetical OI</span><strong>{formatUsd(view.oiUsd, true)}</strong></div>
                   <div className="operator">÷</div>
-                  <div className="parameter-stack"><span className="parameter-lead">α = {security.corruptionThreshold.toFixed(2)}</span><span className="parameter-lead">UMA = {formatUsd(snapshot.umaPriceUsd)}</span></div>
+                  <div className="parameter-stack"><span className="parameter-lead"><Assign sym="α" value={security.corruptionThreshold.toFixed(2)} /></span><span className="parameter-lead"><Formula><msub><mi>P</mi><mtext>UMA</mtext></msub><mo>=</mo><mtext>{formatUsd(snapshot.umaPriceUsd)}</mtext></Formula></span></div>
                   <div className="operator">→</div>
                   <div className="load-orb"><span>required r</span><strong>{formatUma(requirement.requiredStakeUma)}</strong><small>{formatUsd(requirement.securityLoadUsd, true)}</small></div>
                 </div>
@@ -434,8 +435,8 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
         <ol className="cf-method" aria-label="Method note">
           <li>The voter population is the union of revealers across every attempt voted in the selected DVM round, with the stake each held in that round. It is not every UMA staker, so available stake is a lower bound.</li>
           <li>Only the open interest is hypothetical. The UMA price is the anchor dispute’s stored Coinbase hourly price; stakes are the stored revealer stakes.</li>
-          <li>Security follows the frozen data: r_USD = κ · OI / α with α = {security.corruptionThreshold} and κ = {security.attackCaptureFraction}, r_UMA = r_USD / P_UMA, slash fraction {security.slashFraction}. Feasibility uses the simulator’s one-ulp coverage rule.</li>
-          <li>Costs follow the same model as the main simulation (Beta(2, 8), support [0.25μ, 4μ]), drawn at ρ = {formatRho(view.rho)}{view.rho === calibratedRho ? ', the calibrated value' : `, deviating from the calibrated ${formatRho(calibratedRho)}`}. Correlated voters share one common draw with probability √ρ, so a √ρ share of them hold literally the same cost; the stream layout does not depend on ρ, so one seed gives the same underlying draw at every setting. The browser draws them with a seeded PRNG, so quantiles agree with the Python engine in distribution, not draw by draw; the greedy construction and cent-grid search are verified identical on shared inputs.</li>
+          <li>Security follows the frozen data: <Formula><msub><mi>r</mi><mtext>USD</mtext></msub><mo>=</mo><mi>κ</mi><mo>·</mo><mi>OI</mi><mo>/</mo><mi>α</mi></Formula> with <Assign sym="α" value={security.corruptionThreshold} /> and <Assign sym="κ" value={security.attackCaptureFraction} />, <Formula><msub><mi>r</mi><mtext>UMA</mtext></msub><mo>=</mo><msub><mi>r</mi><mtext>USD</mtext></msub><mo>/</mo><msub><mi>P</mi><mtext>UMA</mtext></msub></Formula>, slash fraction {security.slashFraction}. Feasibility uses the simulator’s one-ulp coverage rule.</li>
+          <li>Costs follow the same model as the main simulation (Beta(2, 8), support <Formula><mo>[</mo><mn>0.25</mn><mi>μ</mi><mo>,</mo><mn>4</mn><mi>μ</mi><mo>]</mo></Formula>), drawn at <Assign sym="ρ" value={formatRho(view.rho)} />{view.rho === calibratedRho ? ', the calibrated value' : `, deviating from the calibrated ${formatRho(calibratedRho)}`}. Correlated voters share one common draw with probability <span className="no-break"><Formula><msqrt><mi>ρ</mi></msqrt></Formula>,</span> so a <Formula><msqrt><mi>ρ</mi></msqrt></Formula> share of them hold literally the same cost; the stream layout does not depend on <Sym>ρ</Sym>, so one seed gives the same underlying draw at every setting. The browser draws them with a seeded PRNG, so quantiles agree with the Python engine in distribution, not draw by draw; the greedy construction and cent-grid search are verified identical on shared inputs.</li>
           <li>Not reported: the continuous reward bracket and rounding overhead, which the site does not show elsewhere.</li>
         </ol>
       </main>
