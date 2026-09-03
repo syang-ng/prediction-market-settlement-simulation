@@ -373,7 +373,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                 {SCENARIO_ORDER.map((name) => <ScenarioTable key={name} scenario={scenarios[name]} />)}
                 <RewardEcdf scenarios={scenarios} highlighted={view.scenario} />
                 <DrawIllustration scenario={highlighted} />
-                <p className="cf-repro">{view.trials.toLocaleString()} trials · xoshiro128** · Beta(2, 8) by order statistics · computed in {Math.round(result.timingMs)} ms</p>
+                <p className="cf-repro">computed in {Math.round(result.timingMs)} ms</p>
               </>
             ) : (
               !computing && !run?.error && requirement && !requirement.feasible && (
