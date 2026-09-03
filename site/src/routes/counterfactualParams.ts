@@ -1,12 +1,14 @@
 import { clamp } from '../lib';
 import type { ScenarioName, SecurityConstants, StakeSnapshot, StakeSnapshotDefaults } from '../types';
 
-/** Page state, kept in the hash query: #/counterfactual?round=&oi=&seed=&trials=&scenario= */
+/** Page state, kept in the hash query: #/counterfactual?round=&oi=&seed=&trials=&rho=&scenario= */
 export interface CounterfactualView {
   round: number;
   oiUsd: number;
   seed: number;
   trials: number;
+  /** Within-round pairwise cost correlation; defaults to the file's calibrated value. */
+  rho: number;
   scenario: ScenarioName;
 }
 
@@ -35,7 +37,22 @@ export function sanitizeTrials(raw: number, fallback: number, maxTrials: number)
   return Number.isInteger(raw) ? clamp(raw, 1, maxTrials) : fallback;
 }
 
-export function parseView(params: URLSearchParams, snapshots: StakeSnapshot[], defaults: StakeSnapshotDefaults): CounterfactualView {
+/**
+ * Correlation clamped to [0, 1]; otherwise the fallback. Unlike open interest it is not snapped to
+ * a grid: the control steps in hundredths, but a hand-written URL keeps whatever precision it asks
+ * for, and leaving the value untouched is what makes parse/serialize idempotent. Both endpoints are
+ * ordinary settings — 0 gives every voter an independent cost, 1 gives them all the same one.
+ */
+export function sanitizeRho(raw: number, fallback: number): number {
+  return Number.isFinite(raw) ? clamp(raw, 0, 1) : fallback;
+}
+
+export function parseView(
+  params: URLSearchParams,
+  snapshots: StakeSnapshot[],
+  defaults: StakeSnapshotDefaults,
+  calibratedRho: number,
+): CounterfactualView {
   const requestedRound = numberParam(params, 'round');
   const round = snapshots.some((snapshot) => snapshot.round === requestedRound)
     ? requestedRound
@@ -46,6 +63,7 @@ export function parseView(params: URLSearchParams, snapshots: StakeSnapshot[], d
     oiUsd: sanitizeOi(numberParam(params, 'oi'), defaults.oiUsd),
     seed: sanitizeSeed(numberParam(params, 'seed'), defaults.seed),
     trials: sanitizeTrials(numberParam(params, 'trials'), defaults.trials, defaults.maxTrials),
+    rho: sanitizeRho(numberParam(params, 'rho'), calibratedRho),
     scenario: SCENARIOS.find((name) => name === scenarioText) ?? 'baseline',
   };
 }
@@ -57,6 +75,7 @@ export function serializeView(view: CounterfactualView): URLSearchParams {
     oi: String(view.oiUsd),
     seed: String(view.seed),
     trials: String(view.trials),
+    rho: String(view.rho),
     scenario: view.scenario,
   });
 }

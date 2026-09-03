@@ -58,6 +58,7 @@ export function runCounterfactual(prepared: PreparedSnapshot, params: Counterfac
   if (!Number.isFinite(params.oiUsd) || params.oiUsd <= 0) throw new Error('open interest must be a positive number');
   if (!Number.isInteger(params.trials) || params.trials < 1) throw new Error('trials must be a positive integer');
   if (!Number.isSafeInteger(params.seed) || params.seed < 0) throw new Error('seed must be a non-negative integer');
+  if (!(params.correlation >= 0 && params.correlation <= 1)) throw new Error('cost correlation must lie in [0, 1]');
 
   const { stakes, snapshot } = prepared;
   const requirement = computeRequirement(prepared, params.oiUsd, model.security);
@@ -68,22 +69,25 @@ export function runCounterfactual(prepared: PreparedSnapshot, params: Counterfac
   };
   const input = { ...params, ...model.security, round: snapshot.round };
   if (!requirement.feasible) {
-    return { input, requirement, candidates, scenarios: null, timingMs: now() - started };
+    return { input, requirement, candidates, scenarios: null, firstDrawDistinctCostCount: null, timingMs: now() - started };
   }
 
   const scales = SCENARIO_ORDER.map((name) => model.costModel.scenarioMeansUsd[name]);
   const rng = createPrng(seedMaterial(params.seed, snapshot.round));
   const costs = new Float64Array(stakes.length);
   const workspace = createGreedyWorkspace(stakes.length);
-  const uniforms = new Float64Array(uniformsPerDraw(stakes.length, model.costModel.correlation));
+  const uniforms = new Float64Array(uniformsPerDraw(stakes.length));
   const posted = scales.map(() => new Float64Array(params.trials));
   const counts = scales.map(() => new Float64Array(params.trials));
   const selectedStake = scales.map(() => new Float64Array(params.trials));
   const directCost = scales.map(() => new Float64Array(params.trials));
   const firstDraws: FirstDraw[] = [];
+  let firstDrawDistinctCostCount = 0;
 
   for (let trial = 0; trial < params.trials; trial += 1) {
-    drawNormalizedCosts(rng, costs, model.costModel.correlation, uniforms);
+    drawNormalizedCosts(rng, costs, params.correlation, uniforms);
+    // Read before the greedy scan sorts a view of the same values; `costs` is reused each trial.
+    if (trial === 0) firstDrawDistinctCostCount = new Set(costs).size;
     const { results, sorted } = minimumCentRewards(stakes, costs, requirement.requiredStakeUma, scales, trial === 0, workspace);
     for (let s = 0; s < scales.length; s += 1) {
       posted[s][trial] = results[s].postedRewardUsd;
@@ -137,5 +141,5 @@ export function runCounterfactual(prepared: PreparedSnapshot, params: Counterfac
     };
   });
 
-  return { input, requirement, candidates, scenarios, timingMs: now() - started };
+  return { input, requirement, candidates, scenarios, firstDrawDistinctCostCount, timingMs: now() - started };
 }

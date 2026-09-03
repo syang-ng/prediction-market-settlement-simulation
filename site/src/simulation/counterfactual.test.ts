@@ -30,7 +30,7 @@ const model: ModelConstants = {
   budgetCapsUsd: [50, 100, 200],
 };
 const small = prepareSnapshot(snapshotFromFixture(9733));
-const params = { oiUsd: 1_000_000, seed: 20260821, trials: 200 };
+const params = { oiUsd: 1_000_000, seed: 20260821, trials: 200, correlation: 0.8 };
 const strip = (result: CounterfactualResult) => JSON.stringify({ ...result, timingMs: 0 });
 
 describe('computeRequirement', () => {
@@ -111,6 +111,7 @@ describe('runCounterfactual', () => {
     expect(result.scenarios).toBeNull();
     expect(result.requirement.feasible).toBe(false);
     expect(result.candidates.stakeDescMinimumVoterCount).toBeNull();
+    expect(result.firstDrawDistinctCostCount).toBeNull();
   });
 
   it('rejects invalid parameters', () => {
@@ -120,11 +121,14 @@ describe('runCounterfactual', () => {
     expect(() => runCounterfactual(small, { ...params, seed: 1.5 }, model)).toThrow('seed');
     expect(() => runCounterfactual(small, { ...params, oiUsd: Number.NaN }, model)).toThrow('open interest');
     expect(() => runCounterfactual(small, { ...params, trials: 2.5 }, model)).toThrow('trials');
+    expect(() => runCounterfactual(small, { ...params, correlation: -0.1 }, model)).toThrow('correlation');
+    expect(() => runCounterfactual(small, { ...params, correlation: 1.1 }, model)).toThrow('correlation');
+    expect(() => runCounterfactual(small, { ...params, correlation: Number.NaN }, model)).toThrow('correlation');
   });
 
   it('completes the largest round at 1,000 trials well inside the budget', () => {
     const large = prepareSnapshot(snapshotFromFixture(10196));
-    const result = runCounterfactual(large, { oiUsd: 1_000_000, seed: 20260821, trials: 1000 }, model);
+    const result = runCounterfactual(large, { oiUsd: 1_000_000, seed: 20260821, trials: 1000, correlation: 0.8 }, model);
     console.log(`largest round (1,012 voters): ${result.timingMs.toFixed(0)} ms for 1,000 trials × 3 scenarios`);
     // The product budget is 500 ms on a 2020-class laptop and is enforced by the browser
     // check in the plan's verification task; this unit guard only has to catch a regression
@@ -145,5 +149,44 @@ describe('runCounterfactual', () => {
     expect(baseline.firstDraw.rewardUsd).toBe(0.71);
     expect(baseline.firstDraw.voters).toHaveLength(1);
     expect(baseline.firstDraw.voters[0]).toEqual({ index: 40, stakeUma: 991489.0981927107, costUsd: 0.7093994096401002 });
+  });
+});
+
+describe('runCounterfactual cost correlation', () => {
+  it('takes the correlation from the run parameters, not the frozen model constant', () => {
+    const independent = runCounterfactual(small, { ...params, correlation: 0 }, model);
+    const collapsed = runCounterfactual(small, { ...params, correlation: 1 }, model);
+    expect(strip(independent)).not.toBe(strip(runCounterfactual(small, params, model)));
+    expect(independent.input.correlation).toBe(0);
+    expect(collapsed.input.correlation).toBe(1);
+    // The model constant is only the calibrated default now; changing it must not move a run.
+    const otherModel = { ...model, costModel: { ...model.costModel, correlation: 0.1 } };
+    expect(strip(runCounterfactual(small, params, otherModel))).toBe(strip(runCounterfactual(small, params, model)));
+  });
+
+  it('counts the distinct cost values of the first draw across every candidate', () => {
+    expect(runCounterfactual(small, { ...params, correlation: 0 }, model).firstDrawDistinctCostCount).toBe(55);
+    expect(runCounterfactual(small, { ...params, correlation: 1 }, model).firstDrawDistinctCostCount).toBe(1);
+    const calibrated = runCounterfactual(small, params, model).firstDrawDistinctCostCount as number;
+    expect(calibrated).toBeGreaterThan(1);
+    expect(calibrated).toBeLessThan(55);
+  });
+
+  it('leaves trial 0 selected voters on identical costs when they share the common draw', () => {
+    const collapsed = runCounterfactual(small, { ...params, correlation: 1 }, model);
+    const voters = collapsed.scenarios?.baseline.firstDraw.voters ?? [];
+    expect(voters.length).toBeGreaterThan(0);
+    for (const voter of voters) expect(voter.costUsd).toBe(voters[0].costUsd);
+  });
+
+  it('collapses the draw monotonically as the correlation rises', () => {
+    // The common-value set nests under a shared stream layout (costs.test.ts pins that directly),
+    // so from one seed the distinct-value count can only fall as rho rises. Not a statistical claim.
+    const counts = [0, 0.2, 0.5, 0.8, 0.9, 1].map(
+      (correlation) => runCounterfactual(small, { ...params, correlation }, model).firstDrawDistinctCostCount as number,
+    );
+    expect(counts[0]).toBe(55);
+    expect(counts[counts.length - 1]).toBe(1);
+    for (let i = 1; i < counts.length; i += 1) expect(counts[i]).toBeLessThanOrEqual(counts[i - 1]);
   });
 });

@@ -5,6 +5,7 @@ import {
   nearestSnapshotIndex,
   parseView,
   sanitizeOi,
+  sanitizeRho,
   sanitizeSeed,
   sanitizeTrials,
   serializeView,
@@ -34,28 +35,46 @@ const snapshots = [
   snapshot(10303, '2026-05-31T16:57:20Z'),
 ];
 const defaults: StakeSnapshotDefaults = { oiUsd: 1_000_000, seed: 20260821, trials: 1000, maxTrials: 5000, budgetCapsUsd: [50, 100, 200] };
+const CALIBRATED_RHO = 0.8;
+
+const parse = (query: string) => parseView(new URLSearchParams(query), snapshots, defaults, CALIBRATED_RHO);
 
 describe('parseView', () => {
-  it('falls back to the latest round and the file defaults', () => {
-    expect(parseView(new URLSearchParams(), snapshots, defaults)).toEqual({ round: 10303, oiUsd: 1_000_000, seed: 20260821, trials: 1000, scenario: 'baseline' });
+  it('falls back to the latest round, the file defaults, and the calibrated correlation', () => {
+    expect(parse('')).toEqual({ round: 10303, oiUsd: 1_000_000, seed: 20260821, trials: 1000, rho: 0.8, scenario: 'baseline' });
   });
 
   it('accepts valid parameters and rounds open interest to cents', () => {
-    const view = parseView(new URLSearchParams('round=9733&oi=250000.129&seed=7&trials=250&scenario=high'), snapshots, defaults);
-    expect(view).toEqual({ round: 9733, oiUsd: 250000.13, seed: 7, trials: 250, scenario: 'high' });
+    const view = parse('round=9733&oi=250000.129&seed=7&trials=250&rho=0.35&scenario=high');
+    expect(view).toEqual({ round: 9733, oiUsd: 250000.13, seed: 7, trials: 250, rho: 0.35, scenario: 'high' });
   });
 
-  it('replaces invalid values and clamps trials', () => {
-    const view = parseView(new URLSearchParams('round=1&oi=-5&seed=1.5&trials=99999&scenario=medium'), snapshots, defaults);
-    expect(view).toEqual({ round: 10303, oiUsd: 1_000_000, seed: 20260821, trials: 5000, scenario: 'baseline' });
-    expect(parseView(new URLSearchParams('trials=0'), snapshots, defaults).trials).toBe(1);
-    expect(parseView(new URLSearchParams('seed=0'), snapshots, defaults).seed).toBe(0);
+  it('replaces invalid values and clamps trials and correlation', () => {
+    const view = parse('round=1&oi=-5&seed=1.5&trials=99999&rho=2&scenario=medium');
+    expect(view).toEqual({ round: 10303, oiUsd: 1_000_000, seed: 20260821, trials: 5000, rho: 1, scenario: 'baseline' });
+    expect(parse('trials=0').trials).toBe(1);
+    expect(parse('seed=0').seed).toBe(0);
+    expect(parse('rho=-3').rho).toBe(0);
+    expect(parse('rho=abc').rho).toBe(0.8);
+    expect(parse('rho=').rho).toBe(0.8);
+  });
+
+  it('keeps both correlation endpoints, which are meaningful settings rather than errors', () => {
+    expect(parse('rho=0').rho).toBe(0);
+    expect(parse('rho=1').rho).toBe(1);
   });
 
   it('round-trips through serializeView', () => {
-    const view = { round: 9720, oiUsd: 1234.5, seed: 3, trials: 42, scenario: 'low' as const };
-    expect(serializeView(view).toString()).toBe('round=9720&oi=1234.5&seed=3&trials=42&scenario=low');
-    expect(parseView(serializeView(view), snapshots, defaults)).toEqual(view);
+    const view = { round: 9720, oiUsd: 1234.5, seed: 3, trials: 42, rho: 0.35, scenario: 'low' as const };
+    expect(serializeView(view).toString()).toBe('round=9720&oi=1234.5&seed=3&trials=42&rho=0.35&scenario=low');
+    expect(parseView(serializeView(view), snapshots, defaults, CALIBRATED_RHO)).toEqual(view);
+  });
+
+  it('is idempotent, so making the URL explicit settles in one pass', () => {
+    const once = parse('round=9733&rho=0.125');
+    const twice = parseView(serializeView(once), snapshots, defaults, CALIBRATED_RHO);
+    expect(twice).toEqual(once);
+    expect(serializeView(twice).toString()).toBe(serializeView(once).toString());
   });
 });
 
@@ -72,6 +91,17 @@ describe('sanitizers', () => {
     expect(sanitizeTrials(0, 1000, 5000)).toBe(1);
     expect(sanitizeTrials(1e9, 1000, 5000)).toBe(5000);
     expect(sanitizeTrials(2.5, 1000, 5000)).toBe(1000);
+  });
+
+  it('clamp correlation into [0, 1] and keep hand-typed precision', () => {
+    expect(sanitizeRho(0.35, 0.8)).toBe(0.35);
+    expect(sanitizeRho(0.125, 0.8)).toBe(0.125);
+    expect(sanitizeRho(0, 0.8)).toBe(0);
+    expect(sanitizeRho(1, 0.8)).toBe(1);
+    expect(sanitizeRho(-1, 0.8)).toBe(0);
+    expect(sanitizeRho(4, 0.8)).toBe(1);
+    expect(sanitizeRho(NaN, 0.8)).toBe(0.8);
+    expect(sanitizeRho(Infinity, 0.8)).toBe(0.8);
   });
 });
 

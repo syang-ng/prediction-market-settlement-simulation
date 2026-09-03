@@ -6,10 +6,12 @@ export const COST_MULTIPLIER_UPPER = 4.0;
 
 const ORDER_STATISTIC_SAMPLE = 9;
 
-/** Number of uniforms one drawNormalizedCosts call consumes for `voterCount` voters. */
-export function uniformsPerDraw(voterCount: number, correlation: number): number {
-  if (correlation <= 0) return voterCount * ORDER_STATISTIC_SAMPLE;
-  if (correlation >= 1) return voterCount * ORDER_STATISTIC_SAMPLE + ORDER_STATISTIC_SAMPLE;
+/**
+ * Number of uniforms one drawNormalizedCosts call consumes for `voterCount` voters. The count
+ * does not depend on the correlation, so the stream layout is identical at every rho and one
+ * seed gives the same underlying draw however the page's correlation control is set.
+ */
+export function uniformsPerDraw(voterCount: number): number {
   return voterCount * ORDER_STATISTIC_SAMPLE + ORDER_STATISTIC_SAMPLE + voterCount;
 }
 
@@ -45,14 +47,19 @@ export function drawBeta28(rng: Prng): number {
  * common-shock construction (draw_correlated_scaled_beta_costs): every voter
  * draws an idiosyncratic U_i ~ Beta(2, 8); one common D ~ Beta(2, 8) is drawn
  * per trial; voter i uses D with probability sqrt(rho), otherwise U_i. Distinct
- * voters then have pairwise correlation rho. The stream is consumed in the order
- * U_1 … U_n, D, then the n selection uniforms. `uniforms` is an optional scratch
- * buffer of at least uniformsPerDraw(out.length, correlation) entries.
+ * voters then have pairwise correlation rho, and the sqrt(rho) share that take D
+ * hold literally the same cost. The stream is consumed in the order U_1 … U_n, D,
+ * then the n selection uniforms. `uniforms` is an optional scratch buffer of at
+ * least uniformsPerDraw(out.length) entries.
+ *
+ * The endpoints need no special case: uniform53() lies in [0, 1), so the threshold
+ * sqrt(0) = 0 selects nobody and sqrt(1) = 1 selects everybody. Drawing D and the
+ * selection uniforms unconditionally is what keeps the layout the same at every rho.
  */
 export function drawNormalizedCosts(rng: Prng, out: Float64Array, correlation: number, uniforms?: Float64Array): void {
   if (!(correlation >= 0 && correlation <= 1)) throw new Error('correlation must lie in [0, 1]');
   const n = out.length;
-  const needed = uniformsPerDraw(n, correlation);
+  const needed = uniformsPerDraw(n);
   const buffer = uniforms && uniforms.length >= needed ? uniforms : new Float64Array(needed);
   rng.fillUniform53(buffer, needed);
   let offset = 0;
@@ -60,17 +67,11 @@ export function drawNormalizedCosts(rng: Prng, out: Float64Array, correlation: n
     out[i] = secondSmallestOfNine(buffer, offset);
     offset += ORDER_STATISTIC_SAMPLE;
   }
-  if (correlation > 0) {
-    const common = secondSmallestOfNine(buffer, offset);
-    offset += ORDER_STATISTIC_SAMPLE;
-    if (correlation === 1) {
-      out.fill(common);
-    } else {
-      const threshold = Math.sqrt(correlation);
-      for (let i = 0; i < n; i += 1) {
-        if (buffer[offset + i] < threshold) out[i] = common;
-      }
-    }
+  const common = secondSmallestOfNine(buffer, offset);
+  offset += ORDER_STATISTIC_SAMPLE;
+  const threshold = Math.sqrt(correlation);
+  for (let i = 0; i < n; i += 1) {
+    if (buffer[offset + i] < threshold) out[i] = common;
   }
   const span = COST_MULTIPLIER_UPPER - COST_MULTIPLIER_LOWER;
   for (let i = 0; i < n; i += 1) out[i] = COST_MULTIPLIER_LOWER + span * out[i];

@@ -11,6 +11,8 @@ export interface CounterfactualParams {
   oiUsd: number;
   seed: number;
   trials: number;
+  /** Within-round pairwise cost correlation rho. The model constant is only the calibrated default. */
+  correlation: number;
 }
 
 export interface ModelConstants {
@@ -84,5 +86,10 @@ export interface CounterfactualResult {
   };
   /** Null when the snapshot cannot cover the requirement. */
   scenarios: Record<ScenarioName, ScenarioSummary> | null;
+  /**
+   * Distinct cost values in trial 0's draw, across every candidate. The scenarios only scale a
+   * shared normalized draw, so this is scenario-independent. Null when no draw happened.
+   */
+  firstDrawDistinctCostCount: number | null;
   timingMs: number;
 }

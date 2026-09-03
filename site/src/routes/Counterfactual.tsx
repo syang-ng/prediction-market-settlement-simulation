@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import RewardEcdf from '../components/RewardEcdf';
 import SiteHeader from '../components/SiteHeader';
 import StakeTimeline from '../components/StakeTimeline';
@@ -13,6 +13,7 @@ import {
   nearestSnapshotIndex,
   parseView,
   sanitizeOi,
+  sanitizeRho,
   sanitizeSeed,
   sanitizeTrials,
   serializeView,
@@ -32,8 +33,14 @@ interface RunState {
   error: string | null;
 }
 
-function runKey(round: number, oiUsd: number, seed: number, trials: number): string {
-  return `${round}|${oiUsd}|${seed}|${trials}`;
+function runKey(round: number, oiUsd: number, seed: number, trials: number, rho: number): string {
+  return `${round}|${oiUsd}|${seed}|${trials}|${rho}`;
+}
+
+/** Two decimals for the ordinary case, full precision only when a hand-written URL asked for more. */
+function formatRho(value: number): string {
+  const twoPlaces = value.toFixed(2);
+  return Number(twoPlaces) === value ? twoPlaces : String(value);
 }
 
 function formatDay(iso: string): string {
@@ -56,14 +63,16 @@ function NumberField({
   value,
   hint,
   min,
+  max,
   step,
   sanitize,
   onCommit,
 }: {
-  label: string;
+  label: ReactNode;
   value: number;
   hint: string;
   min: number;
+  max?: number;
   step: number | 'any';
   sanitize: (raw: number) => number;
   onCommit: (value: number) => void;
@@ -89,6 +98,7 @@ function NumberField({
         type="number"
         inputMode="decimal"
         min={min}
+        max={max}
         step={step}
         defaultValue={String(value)}
         onBlur={commit}
@@ -115,7 +125,7 @@ function QuantileLine({ label, values, format }: { label: string; values: Quanti
   );
 }
 
-function ScenarioTable({ scenario }: { scenario: ScenarioSummary }) {
+function ScenarioTable({ scenario, rho }: { scenario: ScenarioSummary; rho: number }) {
   const usd = (value: number | null) => formatUsd(value);
   const count = (value: number | null) => formatCount(value);
   const uma = (value: number | null) => formatUma(value);
@@ -124,7 +134,7 @@ function ScenarioTable({ scenario }: { scenario: ScenarioSummary }) {
     <section aria-label={`${scenarioLabels[scenario.name]} results`}>
       <div className="cf-scenario-title">
         <h3>{scenarioLabels[scenario.name]}</h3>
-        <span>cost support {formatUsd(scenario.costLowerUsd)}–{formatUsd(scenario.costUpperUsd)} · ρ = 0.80 · Beta(2, 8)</span>
+        <span>cost support {formatUsd(scenario.costLowerUsd)}–{formatUsd(scenario.costUpperUsd)} · ρ = {formatRho(rho)} · Beta(2, 8)</span>
       </div>
       <div role="table" aria-label={`${scenarioLabels[scenario.name]} quantiles`}>
         <div className="cf-quantile-head" role="row">
@@ -148,7 +158,17 @@ function ScenarioTable({ scenario }: { scenario: ScenarioSummary }) {
   );
 }
 
-function DrawIllustration({ scenario }: { scenario: ScenarioSummary }) {
+function DrawIllustration({
+  scenario,
+  rho,
+  distinctCostCount,
+  candidateCount,
+}: {
+  scenario: ScenarioSummary;
+  rho: number;
+  distinctCostCount: number | null;
+  candidateCount: number;
+}) {
   const draw = scenario.firstDraw;
   const shown = draw.voters.slice(0, 10);
   const span = scenario.costUpperUsd - scenario.costLowerUsd;
@@ -169,6 +189,13 @@ function DrawIllustration({ scenario }: { scenario: ScenarioSummary }) {
         ))}
         {draw.voters.length > shown.length && <div className="voter-overflow">+ {draw.voters.length - shown.length} additional selected voters</div>}
       </div>
+      {distinctCostCount !== null && (
+        <p className="cf-draw-ties">
+          <strong>{distinctCostCount.toLocaleString()}</strong> distinct cost value{distinctCostCount === 1 ? '' : 's'} across{' '}
+          {candidateCount.toLocaleString()} voters · ρ = {formatRho(rho)}
+          {rho > 0 && <> · at ρ = 0 all {candidateCount.toLocaleString()} differ</>}
+        </p>
+      )}
       <div className="reward-output">
         <div><span>Posted reward · this draw</span><strong>{formatUsd(draw.rewardUsd)}</strong><small>minimum one-cent greedy certificate</small></div>
         <div><span>Selected stake</span><strong>{formatUma(draw.selectedStakeUma)}</strong><small>{draw.voters.length} voter{draw.voters.length === 1 ? '' : 's'}</small></div>
@@ -193,7 +220,11 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
       .catch((reason: Error) => setLoadError(reason.message));
   }, []);
 
-  const view = useMemo(() => (file ? parseView(params, file.snapshots, file.meta.defaults) : null), [file, params]);
+  const calibratedRho = file?.meta.costModel.correlation ?? null;
+  const view = useMemo(
+    () => (file && calibratedRho !== null ? parseView(params, file.snapshots, file.meta.defaults, calibratedRho) : null),
+    [file, calibratedRho, params],
+  );
   const index = useMemo(() => (file && view ? file.snapshots.findIndex((snapshot) => snapshot.round === view.round) : -1), [file, view]);
   const prepared = useMemo(() => (file && index >= 0 ? prepareSnapshot(file.snapshots[index]) : null), [file, index]);
   const model = useMemo<ModelConstants | null>(
@@ -203,6 +234,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
   const oiUsd = view?.oiUsd ?? null;
   const seed = view?.seed ?? null;
   const trials = view?.trials ?? null;
+  const rho = view?.rho ?? null;
 
   // Make the URL fully explicit once the file is loaded (defaults are written too).
   useEffect(() => {
@@ -213,13 +245,13 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
 
   // Run on the next tick so the controls repaint before the synchronous simulation.
   useEffect(() => {
-    if (!prepared || !model || oiUsd === null || seed === null || trials === null) return;
-    const key = runKey(prepared.snapshot.round, oiUsd, seed, trials);
+    if (!prepared || !model || oiUsd === null || seed === null || trials === null || rho === null) return;
+    const key = runKey(prepared.snapshot.round, oiUsd, seed, trials, rho);
     let timeout = 0;
     const frame = window.requestAnimationFrame(() => {
       timeout = window.setTimeout(() => {
         try {
-          setRun({ key, result: runCounterfactual(prepared, { oiUsd, seed, trials }, model), error: null });
+          setRun({ key, result: runCounterfactual(prepared, { oiUsd, seed, trials, correlation: rho }, model), error: null });
         } catch (reason) {
           setRun({ key, result: null, error: reason instanceof Error ? reason.message : String(reason) });
         }
@@ -229,17 +261,19 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
     };
-  }, [prepared, model, oiUsd, seed, trials]);
+  }, [prepared, model, oiUsd, seed, trials, rho]);
 
   if (loadError) return <main className="load-state"><strong>Unable to load the stake snapshots.</strong><span>{loadError}</span></main>;
-  if (!file || !view || !prepared || !model) return <main className="load-state"><span className="loading-orb" /><strong>Loading stake snapshots…</strong></main>;
+  if (!file || !view || !prepared || !model || calibratedRho === null) {
+    return <main className="load-state"><span className="loading-orb" /><strong>Loading stake snapshots…</strong></main>;
+  }
 
   const { snapshots, meta } = file;
   const snapshot = prepared.snapshot;
   const security = meta.security;
   const update = (patch: Partial<CounterfactualView>) => setParams(serializeView({ ...view, ...patch }));
   const selectRound = (nextIndex: number) => update({ round: snapshots[nextIndex].round });
-  const currentKey = runKey(snapshot.round, view.oiUsd, view.seed, view.trials);
+  const currentKey = runKey(snapshot.round, view.oiUsd, view.seed, view.trials, view.rho);
   const computing = run?.key !== currentKey;
   const result = run?.result ?? null;
   const requirement = result?.requirement ?? null;
@@ -259,6 +293,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
           <li>Population: union of the round’s revealers</li>
           <li>Open interest: hypothetical</li>
           <li>Cost draws: seeded browser PRNG</li>
+          {view.rho !== calibratedRho && <li>Cost correlation: ρ = {formatRho(view.rho)} (calibrated {formatRho(calibratedRho)})</li>}
         </ul>
 
         <section className="cf-card" aria-labelledby="cf-when">
@@ -296,6 +331,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
             <NumberField label="Open interest (USD)" value={view.oiUsd} hint="hypothetical market size" min={0.01} step="any" sanitize={(raw) => sanitizeOi(raw, view.oiUsd)} onCommit={(value) => update({ oiUsd: value })} />
             <NumberField label="Seed" value={view.seed} hint="same seed, same draws" min={0} step={1} sanitize={(raw) => sanitizeSeed(raw, view.seed)} onCommit={(value) => update({ seed: value })} />
             <NumberField label="Trials" value={view.trials} hint={`1 to ${meta.defaults.maxTrials.toLocaleString()} cost draws`} min={1} step={1} sanitize={(raw) => sanitizeTrials(raw, view.trials, meta.defaults.maxTrials)} onCommit={(value) => update({ trials: value })} />
+            <NumberField label={<>Cost correlation <span className="glyph">ρ</span></>} value={view.rho} hint={`calibrated ${formatRho(calibratedRho)} · 0 independent, 1 identical`} min={0} max={1} step={0.01} sanitize={(raw) => sanitizeRho(raw, view.rho)} onCommit={(value) => update({ rho: value })} />
             <fieldset className="scenario-control">
               <legend>Highlight scenario</legend>
               <div>
@@ -307,7 +343,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
             <button
               type="button"
               className="cf-step"
-              onClick={() => setParams(serializeView({ round: snapshots[snapshots.length - 1].round, oiUsd: meta.defaults.oiUsd, seed: meta.defaults.seed, trials: meta.defaults.trials, scenario: 'baseline' }))}
+              onClick={() => setParams(serializeView({ round: snapshots[snapshots.length - 1].round, oiUsd: meta.defaults.oiUsd, seed: meta.defaults.seed, trials: meta.defaults.trials, rho: calibratedRho, scenario: 'baseline' }))}
             >
               Reset to defaults
             </button>
@@ -370,9 +406,14 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                   <div><span>p90</span><strong>{formatUsd(highlighted.postedReward.p90)}</strong><small>9 in 10 draws settle at or below</small></div>
                   <div><span>p99</span><strong>{formatUsd(highlighted.postedReward.p99)}</strong><small>99th percentile</small></div>
                 </div>
-                {SCENARIO_ORDER.map((name) => <ScenarioTable key={name} scenario={scenarios[name]} />)}
+                {SCENARIO_ORDER.map((name) => <ScenarioTable key={name} scenario={scenarios[name]} rho={view.rho} />)}
                 <RewardEcdf scenarios={scenarios} highlighted={view.scenario} />
-                <DrawIllustration scenario={highlighted} />
+                <DrawIllustration
+                  scenario={highlighted}
+                  rho={view.rho}
+                  distinctCostCount={result.firstDrawDistinctCostCount}
+                  candidateCount={result.candidates.count}
+                />
                 <p className="cf-repro">computed in {Math.round(result.timingMs)} ms</p>
               </>
             ) : (
@@ -387,7 +428,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
           <li>The voter population is the union of revealers across every attempt voted in the selected DVM round, with the stake each held in that round. It is not every UMA staker, so available stake is a lower bound.</li>
           <li>Only the open interest is hypothetical. The UMA price is the anchor dispute’s stored Coinbase hourly price; stakes are the stored revealer stakes.</li>
           <li>Security follows the frozen data: r_USD = κ · OI / α with α = {security.corruptionThreshold} and κ = {security.attackCaptureFraction}, r_UMA = r_USD / P_UMA, slash fraction {security.slashFraction}. Feasibility uses the simulator’s one-ulp coverage rule.</li>
-          <li>Costs follow the same model as the main simulation (Beta(2, 8), support [0.25μ, 4μ], ρ = {meta.costModel.correlation}). The browser draws them with a seeded PRNG, so quantiles agree with the Python engine in distribution, not draw by draw; the greedy construction and cent-grid search are verified identical on shared inputs.</li>
+          <li>Costs follow the same model as the main simulation (Beta(2, 8), support [0.25μ, 4μ]), drawn at ρ = {formatRho(view.rho)}{view.rho === calibratedRho ? ', the calibrated value' : `, deviating from the calibrated ${formatRho(calibratedRho)}`}. Correlated voters share one common draw with probability √ρ, so a √ρ share of them hold literally the same cost; the stream layout does not depend on ρ, so one seed gives the same underlying draw at every setting. The browser draws them with a seeded PRNG, so quantiles agree with the Python engine in distribution, not draw by draw; the greedy construction and cent-grid search are verified identical on shared inputs.</li>
           <li>Not reported: the continuous reward bracket and rounding overhead, which the site does not show elsewhere.</li>
         </ol>
       </main>

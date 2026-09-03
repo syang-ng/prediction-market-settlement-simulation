@@ -100,14 +100,9 @@ function referenceDraw(rng: Prng, voterCount: number, correlation: number): Floa
   };
   const out = new Float64Array(voterCount);
   for (let i = 0; i < voterCount; i += 1) out[i] = beta();
-  if (correlation > 0) {
-    const common = beta();
-    if (correlation === 1) out.fill(common);
-    else {
-      const threshold = Math.sqrt(correlation);
-      for (let i = 0; i < voterCount; i += 1) if (rng.uniform53() < threshold) out[i] = common;
-    }
-  }
+  const common = beta();
+  const threshold = Math.sqrt(correlation);
+  for (let i = 0; i < voterCount; i += 1) if (rng.uniform53() < threshold) out[i] = common;
   for (let i = 0; i < voterCount; i += 1) out[i] = 0.25 + 3.75 * out[i];
   return out;
 }
@@ -118,7 +113,7 @@ describe('buffered draw equals the per-call reference', () => {
     const direct = new Float64Array(57);
     drawNormalizedCosts(createPrng('reference'), direct, correlation);
     expect(Array.from(direct)).toEqual(Array.from(expected));
-    const scratch = new Float64Array(uniformsPerDraw(57, correlation) + 5);
+    const scratch = new Float64Array(uniformsPerDraw(57) + 5);
     const buffered = new Float64Array(57);
     const rng = createPrng('reference');
     drawNormalizedCosts(rng, buffered, correlation, scratch);
@@ -129,5 +124,74 @@ describe('buffered draw equals the per-call reference', () => {
     const expectedNext = referenceDraw(referenceRng, 57, correlation);
     drawNormalizedCosts(rng, buffered, correlation, scratch);
     expect(Array.from(buffered)).toEqual(Array.from(expectedNext));
+  });
+});
+
+/**
+ * The counterfactual page exposes rho as a live control, so dragging it must show the effect of
+ * correlation rather than reshuffling the draw. That holds only while the stream layout is the
+ * same at every rho, including the two endpoints.
+ */
+describe('correlation is a stream-invariant knob', () => {
+  const RHOS = [0, 0.2, 0.5, 0.8, 0.9, 1];
+
+  /** Voters on the common value at this rho, identified against the rho = 1 draw from the same stream. */
+  function commonSet(seed: string, voterCount: number, correlation: number): Set<number> {
+    const common = new Float64Array(voterCount);
+    drawNormalizedCosts(createPrng(seed), common, 1);
+    const draw = new Float64Array(voterCount);
+    drawNormalizedCosts(createPrng(seed), draw, correlation);
+    const members = new Set<number>();
+    for (let i = 0; i < voterCount; i += 1) if (draw[i] === common[0]) members.add(i);
+    return members;
+  }
+
+  it('consumes the same uniforms at every correlation, endpoints included', () => {
+    for (const correlation of RHOS) {
+      const rng = createPrng('layout');
+      const out = new Float64Array(57);
+      drawNormalizedCosts(rng, out, correlation);
+      // The next draw starts where a fixed-width layout would leave the stream.
+      const expected = createPrng('layout');
+      const skip = new Float64Array(uniformsPerDraw(57));
+      expected.fillUniform53(skip, skip.length);
+      expect(rng.nextUint32()).toBe(expected.nextUint32());
+    }
+  });
+
+  it('is fully independent at 0 and fully collapsed at 1 without a special case', () => {
+    for (let t = 0; t < 100; t += 1) {
+      const independent = new Float64Array(40);
+      drawNormalizedCosts(createPrng(`edge-${t}`), independent, 0);
+      expect(new Set(independent).size).toBe(40);
+      const collapsed = new Float64Array(40);
+      drawNormalizedCosts(createPrng(`edge-${t}`), collapsed, 1);
+      expect(new Set(collapsed).size).toBe(1);
+    }
+  });
+
+  it('holds each voter idiosyncratic draw fixed as correlation changes', () => {
+    const n = 55;
+    const independent = new Float64Array(n);
+    drawNormalizedCosts(createPrng('invariant'), independent, 0);
+    for (const correlation of RHOS.slice(0, -1)) {
+      const draw = new Float64Array(n);
+      drawNormalizedCosts(createPrng('invariant'), draw, correlation);
+      const common = commonSet('invariant', n, correlation);
+      for (let i = 0; i < n; i += 1) {
+        if (!common.has(i)) expect(draw[i]).toBe(independent[i]);
+      }
+    }
+  });
+
+  it('nests the common-value set as correlation rises', () => {
+    const n = 55;
+    const sets = RHOS.map((correlation) => commonSet('nesting', n, correlation));
+    for (let i = 1; i < sets.length; i += 1) {
+      expect(sets[i].size).toBeGreaterThanOrEqual(sets[i - 1].size);
+      for (const voter of sets[i - 1]) expect(sets[i].has(voter)).toBe(true);
+    }
+    expect(sets[0].size).toBe(0);
+    expect(sets[sets.length - 1].size).toBe(n);
   });
 });
