@@ -254,10 +254,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
       <SiteHeader route="/counterfactual" />
       <main id="main" className="cf-page">
         <span className="eyebrow">COUNTERFACTUAL SIMULATION</span>
-        <h1 tabIndex={-1}>Historical stake, hypothetical open interest.</h1>
-        <p className="cf-standfirst">
-          Given the actual UMA voter stake distribution on a chosen date, what participation reward would have been required to securely settle a market with the open interest you specify? Historical Polymarket disputes are usually small; this page keeps the observed stake and replaces only the open interest.
-        </p>
+        <h1 tabIndex={-1}>Historical stake,<br />hypothetical open interest.</h1>
         <ul className="cf-deviations" aria-label="Differences from the main simulation">
           <li>Population: union of the round’s revealers</li>
           <li>Open interest: hypothetical</li>
@@ -340,7 +337,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                 <div className="exposure-visual cf-chain">
                   <div className="market-orb"><span>hypothetical OI</span><strong>{formatUsd(view.oiUsd, true)}</strong></div>
                   <div className="operator">÷</div>
-                  <div className="parameter-stack"><span>α = {security.corruptionThreshold.toFixed(2)}</span><span>κ = {security.attackCaptureFraction.toFixed(2)}</span><span>UMA = {formatUsd(snapshot.umaPriceUsd)}</span></div>
+                  <div className="parameter-stack"><span className="parameter-lead">α = {security.corruptionThreshold.toFixed(2)}</span><span className="parameter-lead">UMA = {formatUsd(snapshot.umaPriceUsd)}</span></div>
                   <div className="operator">→</div>
                   <div className="load-orb"><span>required r</span><strong>{formatUma(requirement.requiredStakeUma)}</strong><small>{formatUsd(requirement.securityLoadUsd, true)}</small></div>
                 </div>
@@ -376,7 +373,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                 {SCENARIO_ORDER.map((name) => <ScenarioTable key={name} scenario={scenarios[name]} />)}
                 <RewardEcdf scenarios={scenarios} highlighted={view.scenario} />
                 <DrawIllustration scenario={highlighted} />
-                <p className="cf-repro">seed {view.seed} · {view.trials.toLocaleString()} trials · xoshiro128** · Beta(2, 8) by order statistics · computed in {Math.round(result.timingMs)} ms</p>
+                <p className="cf-repro">{view.trials.toLocaleString()} trials · xoshiro128** · Beta(2, 8) by order statistics · computed in {Math.round(result.timingMs)} ms</p>
               </>
             ) : (
               !computing && !run?.error && requirement && !requirement.feasible && (
