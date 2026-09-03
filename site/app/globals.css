@@ -80,7 +80,6 @@ button { color: inherit; }
   backdrop-filter: blur(12px);
 }
 .manuscript-mark { display: flex; flex-direction: column; gap: 2px; }
-.manuscript-mark span { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .manuscript-mark strong { font: 600 19px var(--font-sans); letter-spacing: -.01em; }
 nav { display: flex; gap: 26px; color: var(--muted); font-size: 17px; }
 nav a { transition: color .18s ease; }
