@@ -25,7 +25,6 @@ export default function SiteHeader({ route }: { route: RoutePath }) {
           </>
         )}
       </nav>
-      <a className="data-link" href="./data/economic_markets.csv" download>Download data</a>
     </header>
   );
 }

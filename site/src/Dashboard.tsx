@@ -444,7 +444,6 @@ function Methods({ data }: { data: DashboardData }) {
       </div>
       <div className="legacy-note"><strong>Legacy OOv1 audit.</strong> Twenty-two settled requests lack an exact current CLOB linkage and one request remains unresolved. They stay in the census inventory, but none enters the simulation; no fuzzy match or zero imputation is used.</div>
       <div className="method-bottom">
-        <div><h3>Download the corrected artifacts</h3><p>The site reads frozen static files only. No backend, wallet, tracker, or live API is used.</p><div className="download-row"><a href="./data/census_inventory.csv" download>Full census CSV ↓</a><a href="./data/census_candidates.csv" download>Linkage audit CSV ↓</a><a href="./data/eligible_requests.csv" download>Eligible requests CSV ↓</a><a href="./data/economic_markets.csv" download>Economic units CSV ↓</a><a href="./data/economic_market_results.csv" download>Full-release results ↓</a><a href="./data/rolling_economic_market_results.csv" download>Two-day results ↓</a><a href="./data/census_inventory_manifest.json" download>Inventory manifest ↓</a><a href="./data/census_manifest.json" download>Census manifest ↓</a><a href="./data/economic_market_manifest.json" download>Grouping manifest ↓</a><a href="./data/bundle_oi_manifest.json" download>OI manifest ↓</a></div></div>
         <div><h3>Source linkage</h3><ul><li><a href="https://github.com/UMAprotocol/subgraphs">UMA official subgraphs ↗</a></li><li><a href="https://github.com/Polymarket/polymarket-subgraph">Polymarket public subgraphs ↗</a></li><li><a href="https://github.com/Polymarket/neg-risk-ctf-adapter">Polymarket NegRisk adapter ↗</a></li><li><a href="https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/products/get-product-candles">Coinbase candles ↗</a></li></ul></div>
       </div>
     </section>
@@ -527,7 +526,6 @@ export default function Dashboard() {
         <Methods data={data} />
       </main>
 
-      <footer className="site-footer"><div><strong>Interactive demo</strong><span>{data.meta.economicUnitCount.toLocaleString()}-attempt simulation</span></div><p>{data.meta.inventoryCount.toLocaleString()} source-labelled disputes become {data.meta.sourceRequestCount.toLocaleString()} exact complete cases and then {data.meta.ordinaryUnitCount.toLocaleString()} ordinary attempts plus {data.meta.negRiskUnitCount.toLocaleString()} NegRisk event-round attempts. Historical disputes are included strictly before {new Date(data.meta.cutoffUtc).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.</p><a href="#top">Back to top ↑</a></footer>
       <DetailDrawer market={selected} scenario={scenario} open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </>
   );

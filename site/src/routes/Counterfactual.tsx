@@ -385,13 +385,15 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                 <div className="capacity-visual">
                   <div className="capacity-row"><span>Required load</span><div><i style={{ width: `${Math.min(100, 100 / Math.max(1, requirement.capacityRatio))}%` }} /></div><strong>{formatUma(requirement.requiredStakeUma)}</strong></div>
                   <div className="capacity-row candidate"><span>Available stake</span><div><i style={{ width: `${Math.min(100, 100 * Math.min(1, requirement.capacityRatio))}%` }} /></div><strong>{formatUma(requirement.capacityUma)}</strong></div>
-                  <div className={`gate ${requirement.feasible ? 'open' : 'closed'}`}><span>{requirement.feasible ? 'ADMIT' : 'REJECT'}</span></div>
                 </div>
-                {requirement.feasible ? (
-                  <p className="stage-decision admit">✓ Stake-feasible: available stake is {formatRatio(requirement.capacityRatio)} the required load. Stake-descending minimum {formatCount(result?.candidates.stakeDescMinimumVoterCount)} voter{result?.candidates.stakeDescMinimumVoterCount === 1 ? '' : 's'}; effective candidate count {result ? result.candidates.effectiveCandidateCount.toFixed(1) : '—'}.</p>
-                ) : (
-                  <p className="stage-decision reject">× Not stake-feasible: short by {formatUma(requirement.shortfallUma)} ({formatUsd(requirement.shortfallUsd, true)}). The largest open interest this snapshot can secure is {formatUsd(requirement.maxSecurableOiUsd, true)}; a larger reward cannot create stake.</p>
-                )}
+                <div className={`cf-verdict ${requirement.feasible ? 'admit' : 'reject'}`} role="status">
+                  <span className="cf-gate" aria-hidden="true">{requirement.feasible ? 'ADMIT' : 'REJECT'}</span>
+                  {requirement.feasible ? (
+                    <p><strong>Stake-feasible.</strong> Available stake is {formatRatio(requirement.capacityRatio)} the required load. Stake-descending minimum {formatCount(result?.candidates.stakeDescMinimumVoterCount)} voter{result?.candidates.stakeDescMinimumVoterCount === 1 ? '' : 's'}; effective candidate count {result ? result.candidates.effectiveCandidateCount.toFixed(1) : '—'}.</p>
+                  ) : (
+                    <p><strong>Not stake-feasible.</strong> Short by {formatUma(requirement.shortfallUma)} ({formatUsd(requirement.shortfallUsd, true)}). The largest open interest this snapshot can secure is {formatUsd(requirement.maxSecurableOiUsd, true)}; a larger reward cannot create stake.</p>
+                  )}
+                </div>
               </>
             ) : (
               <p className="cf-status">{run?.error ? `Simulation error: ${run.error}` : 'Computing…'}</p>

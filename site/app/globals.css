@@ -75,9 +75,8 @@ button { color: inherit; }
 .manuscript-mark span { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .manuscript-mark strong { font: 600 19px var(--font-sans); letter-spacing: -.01em; }
 nav { display: flex; gap: 26px; color: var(--muted); font-size: 17px; }
-nav a, .data-link { transition: color .18s ease; }
-nav a:hover, nav a:focus-visible, .data-link:hover, .data-link:focus-visible { color: var(--slate); }
-.data-link { justify-self: end; color: var(--slate); font-size: 15.5px; font-weight: 700; }
+nav a { transition: color .18s ease; }
+nav a:hover, nav a:focus-visible { color: var(--slate); }
 
 .hero { padding: clamp(72px, 8vw, 108px) 5vw 34px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr); gap: 8vw; align-items: end; max-width: 1260px; margin: auto; }
@@ -246,20 +245,13 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
 .source-coverage > div:first-child strong { font-size: 23px; }
 .legacy-note { max-width: 1260px; margin: 0 auto 18px; padding: 14px 18px; border: 1px solid var(--line); border-top: 0; color: var(--muted); background: rgba(127,147,140,.035); font-size: 14px; line-height: 1.6; }
 .legacy-note strong { color: var(--ink); }
-.method-bottom { display: grid; grid-template-columns: 1.35fr .65fr; gap: 8vw; max-width: 1260px; margin: 46px auto 0; }
+.method-bottom { display: grid; grid-template-columns: minmax(0, 560px); gap: 8vw; max-width: 1260px; margin: 46px auto 0; }
 .method-bottom h3 { margin: 0 0 9px; font: 600 26.5px var(--font-sans); }
 .method-bottom p { max-width: 600px; color: var(--muted); font-size: 16px; line-height: 1.62; }
-.download-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-.download-row a { padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--slate); font-size: 12.5px; font-weight: 700; }
 .method-bottom ul { margin: 0; padding: 0; list-style: none; }
 .method-bottom li { border-top: 1px solid var(--line); }
 .method-bottom li a { display: block; padding: 9px 0; color: var(--slate); font-size: 14px; }
 
-.site-footer { display: grid; grid-template-columns: auto minmax(260px, 650px) auto; gap: 5vw; align-items: center; padding: 30px 5vw; border-top: 1px solid var(--line); color: var(--muted); background: var(--paper-deep); }
-.site-footer > div { display: flex; flex-direction: column; gap: 3px; color: var(--ink); font-size: 14.5px; }
-.site-footer > div span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-.site-footer p { margin: 0; font-size: 12.5px; line-height: 1.55; }
-.site-footer > a { color: var(--slate); font-size: 12.5px; }
 
 .drawer-layer { position: fixed; inset: 0; z-index: 80; visibility: hidden; pointer-events: none; }
 .drawer-layer.open { visibility: visible; pointer-events: auto; }
@@ -338,13 +330,10 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
   .comparison-table { overflow-x: auto; }
   .comparison-head, .comparison-row { min-width: 880px; }
   .method-bottom { grid-template-columns: 1fr; gap: 38px; }
-  .site-footer { grid-template-columns: 1fr; }
-  .site-footer > a { justify-self: start; }
 }
 
 @media (max-width: 540px) {
   .site-header { padding: 0 17px; }
-  .data-link { display: none; }
   .hero, .simulation-section, .sample-section, .explorer-section, .methods-section { padding-left: 17px; padding-right: 17px; }
   h1 { font-size: clamp(44px, 12vw, 64px); }
   .protocol-topline { grid-template-columns: 1fr; }
@@ -425,9 +414,15 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .cf-facts small { color: var(--muted); font-size: 12px; }
 .cf-chain { margin-bottom: 22px; }
 .cf-chain .load-orb small { margin-top: 4px; color: var(--muted); font-size: 12px; }
-.cf-card-body .stage-decision { margin-top: 18px; padding: 13px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: var(--paper); font-size: 15px; line-height: 1.5; }
-.cf-card-body .stage-decision.admit { color: var(--green); border-color: rgba(96,118,108,.38); background: rgba(96,118,108,.06); }
-.cf-card-body .stage-decision.reject { color: var(--red); border-color: rgba(143,97,92,.38); background: rgba(143,97,92,.06); }
+/* Verdict strip: the ADMIT / REJECT gate sits left of its explanation, filled with the site's semantic colors. */
+.cf-verdict { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 12px 14px; border: 1px solid; border-radius: 6px; line-height: 1.5; }
+.cf-verdict p { margin: 0; font-size: 15px; }
+.cf-verdict p strong { font-weight: 700; }
+.cf-verdict.admit { color: var(--green); border-color: rgba(96,118,108,.38); background: rgba(96,118,108,.06); }
+.cf-verdict.reject { color: var(--red); border-color: rgba(143,97,92,.38); background: rgba(143,97,92,.06); }
+.cf-gate { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 100px; min-height: 44px; padding: 0 14px; border-radius: 5px; color: #fff; font: 600 13px var(--font-mono); letter-spacing: .14em; }
+.cf-verdict.admit .cf-gate { background: var(--green); }
+.cf-verdict.reject .cf-gate { background: var(--red); }
 .cf-headline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
 .cf-headline > div { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
 .cf-headline span { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
