@@ -23,7 +23,7 @@ export function niceCap(value: number): number {
   return Math.max(10 * magnitude, 0.01);
 }
 
-function EcdfPanel({ scenario, highlighted }: { scenario: ScenarioSummary; highlighted: boolean }) {
+function EcdfPanel({ scenario, highlighted, onSelect }: { scenario: ScenarioSummary; highlighted: boolean; onSelect: () => void }) {
   const cap = niceCap(scenario.postedReward.p99 ?? 0);
   const values = scenario.postedRewardsSorted;
   const n = values.length;
@@ -41,8 +41,8 @@ function EcdfPanel({ scenario, highlighted }: { scenario: ScenarioSummary; highl
   const xTicks = [0, cap / 2, cap];
   const yTicks = [0, 0.5, 1];
   return (
-    <figure className={`cf-ecdf-panel${highlighted ? ' highlighted' : ''}`}>
-      <figcaption>{LABELS[scenario.name]}</figcaption>
+    <button type="button" className={`cf-ecdf-panel${highlighted ? ' highlighted' : ''}`} aria-pressed={highlighted} aria-label={`Highlight ${LABELS[scenario.name]}`} title={`Highlight ${LABELS[scenario.name]}`} onClick={onSelect}>
+      <span className="cf-ecdf-title">{LABELS[scenario.name]}</span>
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`ECDF of posted reward, ${LABELS[scenario.name]}, capped at ${formatUsd(cap)}`}>
         {yTicks.map((share) => (
           <g key={share} className="cf-grid">
@@ -53,21 +53,22 @@ function EcdfPanel({ scenario, highlighted }: { scenario: ScenarioSummary; highl
         {xTicks.map((value) => (
           <g key={value} className="cf-grid">
             <line x1={x(value)} x2={x(value)} y1={HEIGHT - MARGIN.bottom} y2={HEIGHT - MARGIN.bottom + 4} />
-            <text x={x(value)} y={HEIGHT - MARGIN.bottom + 16} textAnchor="middle">{formatUsd(value)}</text>
+            <text x={x(value)} y={HEIGHT - MARGIN.bottom + 16} textAnchor={value === 0 ? 'start' : value === cap ? 'end' : 'middle'}>{formatUsd(value)}</text>
           </g>
         ))}
         <path d={path} />
       </svg>
       <small>Posted reward (USD, cap {formatUsd(cap)} = p99 rounded up); rewards above the cap are drawn at the cap.</small>
-    </figure>
+    </button>
   );
 }
 
-export default function RewardEcdf({ scenarios, highlighted }: { scenarios: Record<ScenarioName, ScenarioSummary>; highlighted: ScenarioName }) {
+/** Three ECDF panels; clicking one makes that scenario the highlighted one. */
+export default function RewardEcdf({ scenarios, highlighted, onSelect }: { scenarios: Record<ScenarioName, ScenarioSummary>; highlighted: ScenarioName; onSelect: (name: ScenarioName) => void }) {
   return (
     <div className="cf-ecdf">
       {SCENARIOS.map((name) => (
-        <EcdfPanel key={name} scenario={scenarios[name]} highlighted={name === highlighted} />
+        <EcdfPanel key={name} scenario={scenarios[name]} highlighted={name === highlighted} onSelect={() => onSelect(name)} />
       ))}
     </div>
   );

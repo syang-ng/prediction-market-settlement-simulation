@@ -446,9 +446,10 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .cf-shares { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .cf-shares span { padding: 5px 7px; border: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
 .cf-ecdf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
-.cf-ecdf-panel { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
+.cf-ecdf-panel { display: block; width: 100%; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; color: inherit; background: var(--paper); font: inherit; text-align: left; cursor: pointer; transition: border-color .18s ease, background .18s ease; }
+.cf-ecdf-panel:hover { border-color: var(--slate); }
 .cf-ecdf-panel.highlighted { border-color: var(--sage); background: rgba(127,147,140,.06); }
-.cf-ecdf-panel figcaption { margin-bottom: 6px; color: var(--ink); font-size: 14px; font-weight: 700; }
+.cf-ecdf-panel .cf-ecdf-title { display: block; margin-bottom: 6px; color: var(--ink); font-size: 14px; font-weight: 700; }
 .cf-ecdf-panel svg { display: block; width: 100%; height: auto; }
 .cf-ecdf-panel path { fill: none; stroke: var(--sage); stroke-width: 1.6; }
 .cf-ecdf-panel.highlighted path { stroke: var(--slate); stroke-width: 2; }

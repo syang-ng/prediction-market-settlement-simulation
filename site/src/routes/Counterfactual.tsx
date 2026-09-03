@@ -340,7 +340,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                   <button type="button" key={name} aria-pressed={view.scenario === name} className={view.scenario === name ? 'selected' : ''} onClick={() => update({ scenario: name })}>{scenarioLabels[name]}</button>
                 ))}
               </div>
-              <small>emphasised in the headline, ECDF, and draw below; all three are always computed</small>
+              <small>emphasised in the headline, ECDF, and draw below; all three are always computed. Clicking a chart switches too.</small>
             </fieldset>
             <div className="cf-field cf-reset">
               <span aria-hidden="true">&nbsp;</span>
@@ -415,7 +415,7 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
                   <div><span>p99</span><strong>{formatUsd(highlighted.postedReward.p99)}</strong><small>99th percentile</small></div>
                 </div>
                 {SCENARIO_ORDER.map((name) => <ScenarioTable key={name} scenario={scenarios[name]} rho={view.rho} />)}
-                <RewardEcdf scenarios={scenarios} highlighted={view.scenario} />
+                <RewardEcdf scenarios={scenarios} highlighted={view.scenario} onSelect={(name) => update({ scenario: name })} />
                 <DrawIllustration
                   scenario={highlighted}
                   rho={view.rho}
