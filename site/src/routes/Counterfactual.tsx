@@ -332,21 +332,26 @@ export default function CounterfactualPage({ params, setParams }: { params: URLS
             <NumberField label="Seed" value={view.seed} hint="same seed, same draws" min={0} step={1} sanitize={(raw) => sanitizeSeed(raw, view.seed)} onCommit={(value) => update({ seed: value })} />
             <NumberField label="Trials" value={view.trials} hint={`1 to ${meta.defaults.maxTrials.toLocaleString()} cost draws`} min={1} step={1} sanitize={(raw) => sanitizeTrials(raw, view.trials, meta.defaults.maxTrials)} onCommit={(value) => update({ trials: value })} />
             <NumberField label={<>Cost correlation <span className="glyph">ρ</span></>} value={view.rho} hint={`calibrated ${formatRho(calibratedRho)} · 0 independent, 1 identical`} min={0} max={1} step={0.01} sanitize={(raw) => sanitizeRho(raw, view.rho)} onCommit={(value) => update({ rho: value })} />
-            <fieldset className="scenario-control">
+            <fieldset className="scenario-control cf-field">
               <legend>Highlight scenario</legend>
               <div>
                 {SCENARIO_ORDER.map((name) => (
                   <button type="button" key={name} aria-pressed={view.scenario === name} className={view.scenario === name ? 'selected' : ''} onClick={() => update({ scenario: name })}>{scenarioLabels[name]}</button>
                 ))}
               </div>
+              <small>emphasised in the headline, ECDF, and draw below; all three are always computed</small>
             </fieldset>
-            <button
-              type="button"
-              className="cf-step"
-              onClick={() => setParams(serializeView({ round: snapshots[snapshots.length - 1].round, oiUsd: meta.defaults.oiUsd, seed: meta.defaults.seed, trials: meta.defaults.trials, rho: calibratedRho, scenario: 'baseline' }))}
-            >
-              Reset to defaults
-            </button>
+            <div className="cf-field cf-reset">
+              <span aria-hidden="true">&nbsp;</span>
+              <button
+                type="button"
+                className="cf-step"
+                onClick={() => setParams(serializeView({ round: snapshots[snapshots.length - 1].round, oiUsd: meta.defaults.oiUsd, seed: meta.defaults.seed, trials: meta.defaults.trials, rho: calibratedRho, scenario: 'baseline' }))}
+              >
+                Reset to defaults
+              </button>
+              <small>latest round, $1,000,000, seed {meta.defaults.seed}, {meta.defaults.trials.toLocaleString()} trials, ρ = {formatRho(calibratedRho)}</small>
+            </div>
           </div>
         </section>
 

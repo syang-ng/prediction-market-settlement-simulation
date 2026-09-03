@@ -409,8 +409,11 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .cf-step:disabled { opacity: .4; cursor: not-allowed; }
 .cf-caption { margin: 12px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .cf-caption strong { color: var(--ink); }
-.cf-inputs { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)) minmax(440px, 1.6fr) auto; gap: 10px; align-items: end; padding: 18px 22px; border-top: 1px solid var(--line); }
-.cf-inputs .scenario-control { min-width: 0; }
+/* Two rows: four equal fields, then the scenario toggle (two columns) beside the reset button. Every cell shares the label / 44px control / hint skeleton so controls align. */
+.cf-inputs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; align-items: start; padding: 18px 22px; border-top: 1px solid var(--line); }
+.cf-inputs .scenario-control { grid-column: span 2; min-width: 0; }
+.cf-inputs .cf-reset { grid-column: span 1; }
+.cf-inputs .cf-reset .cf-step { width: 100%; min-height: 44px; }
 .cf-field > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 13px; font-weight: 750; text-transform: uppercase; letter-spacing: .09em; }
 .cf-field > span .glyph { text-transform: none; letter-spacing: 0; }
 .cf-field input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: var(--panel); }
@@ -459,6 +462,7 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 
 @media (max-width: 1080px) {
   .cf-inputs { grid-template-columns: 1fr 1fr; }
+  .cf-inputs .cf-reset > span { display: none; }
   .cf-facts { grid-template-columns: 1fr 1fr; }
 }
 
@@ -472,6 +476,7 @@ nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 @media (max-width: 540px) {
   .cf-page { padding-left: 17px; padding-right: 17px; }
   .cf-inputs, .cf-facts { grid-template-columns: 1fr; }
+  .cf-inputs .scenario-control, .cf-inputs .cf-reset { grid-column: auto; }
 }
 
 /* Counterfactual page header: align the title block with the 1260px content column. */
