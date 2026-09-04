@@ -278,10 +278,10 @@ function AssumptionComparison({ data }: { data: DashboardData }) {
   return (
     <section className="sample-section" id="comparison">
       <div className="section-intro">
-        <div><span className="eyebrow">STAKE AVAILABILITY</span><h2>Full release first; then a two-day review window.</h2></div>
-        <p>The second run carries each admitted security load until DVM resolution plus two days, so earlier markets can reduce later voters’ residual stake.</p>
+        <div><span className="eyebrow">STAKE AVAILABILITY</span><h2>No market overlap first; then observed timing with a <span className="no-break">two-day lock.</span></h2></div>
+        <p><strong>All stake released</strong> treats each settlement attempt independently: it ignores overlap across markets and assumes every voter’s full stake is available at the start of each attempt. <strong>Resolution + 2 days</strong> instead follows the markets’ observed timing and keeps each admitted security load locked until the corresponding DVM resolution plus two days, so overlapping locks can reduce the residual stake available to later markets.</p>
       </div>
-      <div className="comparison-table" role="table" aria-label="Full-release and rolling-window comparison">
+      <div className="comparison-table" role="table" aria-label="Stake availability comparison: all stake released versus resolution plus two days">
         <div className="comparison-head" role="row"><span>Assumption</span><span>Admission</span><span>Reward p50</span><span>Reward p90</span><span>Reward p99</span><span>Voters p99</span><span>History reward</span></div>
         <div className="comparison-row" role="row">
           <strong>All stake released</strong><span>{formatPercent(full.admissionShare)}</span><span>{formatUsd(full.postedReward.p50)}</span><span>{formatUsd(full.postedReward.p90)}</span><span>{formatUsd(full.postedReward.p99)}</span><span>{formatCount(full.selectedVoterCount.p99)}</span><span>{formatUsd(full.totalRewardHistoryMeanUsd)} mean</span>
@@ -290,7 +290,7 @@ function AssumptionComparison({ data }: { data: DashboardData }) {
           <strong>Resolution + 2 days</strong><span>{formatPercent(rolling.admissionShare)}</span><span>{formatUsd(rolling.postedReward.p50)}</span><span>{formatUsd(rolling.postedReward.p90)}</span><span>{formatUsd(rolling.postedReward.p99)}</span><span>{formatCount(rolling.selectedVoterCount.p99)}</span><span>{formatUsd(rolling.pathTotalRewardUsd.p50)} p50</span>
         </div>
       </div>
-      <p className="sample-note">Prior locks reduce at least one candidate’s capacity in {formatPercent(rolling.capacityReducedShare)} of unit-trials, but induce outright infeasibility in only {formatPercent(rolling.priorLocksInducedInfeasibleShare)} of snapshot-feasible draws. Among served draws, {formatPercent(rolling.residualRequiresMoreVotersShare)} require more voters than the full-release stake-only minimum. Pooled baseline p99 reward rises from {formatUsd(full.postedReward.p99)} to {formatUsd(rolling.postedReward.p99)}.</p>
+      <p className="sample-note">Prior locks reduce at least one candidate’s capacity in {formatPercent(rolling.capacityReducedShare)} of unit-trials, but induce outright infeasibility in only {formatPercent(rolling.priorLocksInducedInfeasibleShare)} of snapshot-feasible draws. Among served draws, {formatPercent(rolling.residualRequiresMoreVotersShare)} require more voters than the no-overlap stake-only minimum. Pooled baseline p99 reward rises from {formatUsd(full.postedReward.p99)} to {formatUsd(rolling.postedReward.p99)}.</p>
     </section>
   );
 }
