@@ -85,10 +85,10 @@ nav { display: flex; gap: 26px; color: var(--muted); font-size: 17px; }
 nav a { transition: color .18s ease; }
 nav a:hover, nav a:focus-visible { color: var(--slate); }
 
-.hero { padding: clamp(72px, 8vw, 108px) 5vw 34px; }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr); gap: 8vw; align-items: end; max-width: 1260px; margin: auto; }
+.hero { padding: clamp(36px, 4vw, 54px) 5vw 34px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr); gap: 8vw; align-items: start; max-width: 1260px; margin: auto; }
 .eyebrow { color: var(--slate); font-size: 14.5px; font-weight: 750; letter-spacing: .16em; }
-h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1.02 var(--font-sans); letter-spacing: -.02em; }
+h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(36px, 3.9vw, 58px)/1.06 var(--font-sans); letter-spacing: -.02em; }
 .hero-copy { max-width: 710px; margin: 0; color: var(--muted); font-size: clamp(19px, 1.55vw, 24px); line-height: 1.58; }
 .hero-summary-table { padding-left: 26px; border-left: 1px solid var(--line); }
 .hero-summary-table > span { color: var(--muted); font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
@@ -353,7 +353,7 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(46px, 5.2vw, 79px)/1
 @media (max-width: 540px) {
   .site-header { padding: 0 17px; }
   .hero, .simulation-section, .sample-section, .explorer-section, .methods-section { padding-left: 17px; padding-right: 17px; }
-  h1 { font-size: clamp(44px, 12vw, 64px); }
+  h1 { font-size: clamp(32px, 8.8vw, 46px); }
   .protocol-topline { grid-template-columns: 1fr; }
   .protocol-progress button:not(.current):not(.reached) { display: none; }
   .stage-copy, .stage-visual { padding: 24px 18px; }
