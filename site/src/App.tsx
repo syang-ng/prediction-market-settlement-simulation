@@ -7,7 +7,7 @@ import MethodPage from './routes/Method';
 import { useHashRoute, type RoutePath } from './useHashRoute';
 
 const titles: Record<RoutePath, string> = {
-  '/': 'Interactive Demo · Sufficient Dispute Rewards',
+  '/': 'The Oracle Is Not Enough - Secure Settlement Dashboard',
   '/counterfactual': 'Counterfactual Open Interest · Sufficient Dispute Rewards',
   '/method': 'Method & Data · Sufficient Dispute Rewards',
 };
