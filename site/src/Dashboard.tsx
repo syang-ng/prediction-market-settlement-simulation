@@ -506,10 +506,8 @@ export default function Dashboard() {
                 <div><dt>Pooled reward · p90</dt><dd>{formatUsd(baseline.postedReward.p90)}</dd></div>
                 <div><dt>Pooled reward · p99</dt><dd>{formatUsd(baseline.postedReward.p99)}</dd></div>
               </dl>
-              <small>{data.meta.trialsPerUnitScenario.toLocaleString()} cost draws per attempt-scenario; rewards are minimum one-cent greedy sufficient certificates.</small>
             </div>
           </div>
-          <div className="hero-disclaimer"><span className="data-label observed">Observed</span> corrected OI · UMA price · revealed stake <i /> <span className="data-label simulated">Simulated</span> verification costs · greedy rewards</div>
         </section>
 
         <ProcessSimulator key={`${selected.id}-${scenario}`} market={selected} markets={data.markets} trials={data.meta.trialsPerUnitScenario} scenario={scenario} percentile={percentile} onScenario={setScenario} onPercentile={setPercentile} onMarket={setSelectedId} onDetails={() => setDrawerOpen(true)} />

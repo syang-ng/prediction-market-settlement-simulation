@@ -92,13 +92,10 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(36px, 3.9vw, 58px)/1
 .hero-copy { max-width: 710px; margin: 0; color: var(--muted); font-size: clamp(19px, 1.55vw, 24px); line-height: 1.58; }
 .hero-summary-table { padding-left: 26px; border-left: 1px solid var(--line); }
 .hero-summary-table > span { color: var(--muted); font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
-.hero-summary-table dl { margin: 15px 0 12px; }
+.hero-summary-table dl { margin: 15px 0 0; }
 .hero-summary-table dl div { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-top: 1px solid var(--line); }
 .hero-summary-table dt { color: var(--muted); font-size: 15.5px; }
 .hero-summary-table dd { margin: 0; font: 600 21.5px var(--font-sans); }
-.hero-summary-table small { display: block; color: var(--muted); font-size: 14px; line-height: 1.55; }
-.hero-disclaimer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: 1260px; margin: 42px auto 0; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-.hero-disclaimer i { width: 1px; height: 13px; margin: 0 4px; background: var(--line); }
 .data-label { display: inline-flex; width: max-content; padding: 4px 7px; border: 1px solid currentColor; border-radius: 3px; font-size: 11.5px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .data-label.observed { color: var(--slate); background: rgba(96,114,123,.04); }
 .data-label.simulated { color: var(--umber); background: rgba(148,119,96,.04); }
