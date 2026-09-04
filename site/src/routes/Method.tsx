@@ -8,9 +8,12 @@ import { useDashboardData } from '../useDashboardData';
 function Methods({ data }: { data: DashboardData }) {
   return (
     <section className="methods-section" id="method">
-      <div className="section-intro">
-        <div><span className="eyebrow">METHOD & DATA</span><h1 tabIndex={-1}>Observed exposure and stake; simulated verification costs.</h1></div>
-        <p>The estimand is a sufficient reward conditional on an observed dispute—not a dispute probability or oracle-error rate.</p>
+      <div className="section-intro method-intro">
+        <div><span className="eyebrow">METHOD & DATA</span><h1 tabIndex={-1}>Two questions for every disputed market.</h1></div>
+        <ol className="method-questions" aria-label="The two questions">
+          <li><span className="method-number">01</span><strong>Was there enough UMA stake to secure it?</strong><p>Answered from observed Polymarket exposure and the UMA stakes held in the dispute’s DVM round.</p></li>
+          <li><span className="method-number">02</span><strong>What reward induces enough verification?</strong><p>Answered by simulating verification costs for every market that passes the first question.</p></li>
+        </ol>
       </div>
       <div className="method-grid">
         <article><span className="method-number">01</span><h3>Define attempts</h3><p>Ordinary binaries remain request singletons. NegRisk requests sharing an event and DVM round become one economic attempt, one verification task, and one reward pool.</p><div className="method-formula"><Formula block><mi>u</mi><mo>=</mo><mtext>request</mtext><mspace width="0.35em" /><mtext>or</mtext><mspace width="0.35em" /><mo>(</mo><mtext>event</mtext><mo>,</mo><mtext>round</mtext><mo>)</mo></Formula></div></article>
@@ -33,13 +36,6 @@ function Methods({ data }: { data: DashboardData }) {
         </article>
       </div>
       <div className="truth-callout"><strong>Two capacity runs</strong><p>Full release treats every attempt independently. The rolling run locks admitted pro-rata security load from arrival until DVM resolution plus {data.meta.reviewWindowDays} days; failed arrivals are recorded once and not retried.</p></div>
-      <div className="source-coverage" aria-label="Oracle deployment coverage">
-        <div><strong>Three-deployment census</strong><p>All source-labelled disputes before the cutoff are retained in the frozen inventory. Simulation uses only exact complete-case linkages.</p></div>
-        {data.meta.oracleSources.map((source) => (
-          <div key={source.variant}><span>{source.label}</span><strong>{source.rawCount.toLocaleString()} → {source.eligibleCount.toLocaleString()} → {source.attemptCount.toLocaleString()}</strong><small>raw · eligible · attempts</small></div>
-        ))}
-      </div>
-      <div className="legacy-note"><strong>Legacy OOv1 audit.</strong> Twenty-two settled requests lack an exact current CLOB linkage and one request remains unresolved. They stay in the census inventory, but none enters the simulation; no fuzzy match or zero imputation is used.</div>
       <div className="method-bottom">
         <div><h3>Source linkage</h3><ul><li><a href="https://github.com/UMAprotocol/subgraphs">UMA official subgraphs ↗</a></li><li><a href="https://github.com/Polymarket/polymarket-subgraph">Polymarket public subgraphs ↗</a></li><li><a href="https://github.com/Polymarket/neg-risk-ctf-adapter">Polymarket NegRisk adapter ↗</a></li><li><a href="https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/products/get-product-candles">Coinbase candles ↗</a></li></ul></div>
       </div>
