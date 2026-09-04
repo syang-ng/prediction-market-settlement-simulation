@@ -272,6 +272,39 @@ function ProcessSimulator({
   );
 }
 
+function ContextSection({ data }: { data: DashboardData }) {
+  const full = data.comparison.fullRelease;
+  const rolling = data.comparison.rolling2d;
+  const baseline = data.panelSummaries.find((row) => row.scenario === 'baseline')!;
+  const high = data.panelSummaries.find((row) => row.scenario === 'high')!;
+  const infeasible = baseline.unitCount - baseline.feasibleCount;
+  return (
+    <section className="context-section" id="context" aria-labelledby="context-title">
+      <div className="context-intro">
+        <span className="eyebrow">BACKGROUND</span>
+        <h2 id="context-title">Why settlement needs more than an oracle,<br />and what this dashboard shows.</h2>
+      </div>
+      <div className="context-grid">
+        <article>
+          <span className="method-number">01</span>
+          <h3>The problem</h3>
+          <p>A prediction market is only as secure as its settlement layer. Yet today’s settlement mechanisms can fail to provide enough economic security or participation incentives. In our recent paper, <em>The Oracle Is Not Enough: Secure Settlement for Prediction Markets</em>, we design a secure settlement layer that ties prediction market settlement and voter incentives to the security required by each market.</p>
+        </article>
+        <article>
+          <span className="method-number">02</span>
+          <h3>What the dashboard shows</h3>
+          <p>This dashboard uses real-world data to estimate the cost of deploying our secure settlement design in practice. Using historical UMA stake and Polymarket market data, it computes the participation rewards required under different verification-cost assumptions, allowing us to assess whether the mechanism is practical under real market conditions.</p>
+        </article>
+        <article>
+          <span className="method-number">03</span>
+          <h3>Takeaways</h3>
+          <p> The main takeaway is that the participation cost of secure settlement is small in practice. Across historical disputes, the 99th-percentile required reward is about <strong>$20</strong> under low verification costs, <strong>$120</strong> under the baseline setting, and <strong>$480</strong> even under high verification costs. This suggests that our settlement design can provide stronger security at a modest participation cost. </p>
+        </article>
+      </div>
+    </section>
+  );
+}
+
 function AssumptionComparison({ data }: { data: DashboardData }) {
   const full = data.comparison.fullRelease;
   const rolling = data.comparison.rolling2d;
@@ -331,7 +364,7 @@ function MarketExplorer({ markets, scenario, trials, onSelect }: { markets: Mark
     <section className="explorer-section" id="markets">
       <div className="section-intro inverse">
         <div><span className="eyebrow">ATTEMPT-LEVEL RESULTS</span><h2>Inspect all {markets.length.toLocaleString()} economic settlement attempts.</h2></div>
-        <p>Formal quantiles use {trials.toLocaleString()} hypothetical cost vectors per attempt-scenario. NegRisk OI is event-wide and its same-round component requests share one reward pool.</p>
+        <p>Formal quantiles use {trials.toLocaleString()} hypothetical cost vectors per attempt-scenario.</p>
       </div>
       <div className="explorer-controls">
         <label className="search-control"><span>Search attempts</span><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(25); }} placeholder="Question, event, request, condition, or DVM round" /></label>
@@ -513,6 +546,7 @@ export default function Dashboard() {
           </div>
         </section>
 
+        <ContextSection data={data} />
         <ProcessSimulator key={`${selected.id}-${scenario}`} market={selected} markets={data.markets} trials={data.meta.trialsPerUnitScenario} scenario={scenario} percentile={percentile} onScenario={setScenario} onPercentile={setPercentile} onMarket={setSelectedId} onDetails={() => setDrawerOpen(true)} />
         <AssumptionComparison data={data} />
         <MarketExplorer markets={data.markets} scenario={scenario} trials={data.meta.trialsPerUnitScenario} onSelect={(market) => { setSelectedId(market.id); setDrawerOpen(true); }} />

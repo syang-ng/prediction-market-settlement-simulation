@@ -36,6 +36,15 @@ export function shortId(value: string): string {
   return `${value.slice(0, 9)}…${value.slice(-7)}`;
 }
 
+const utcDate = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' });
+const utcTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false });
+
+/** { date: "22 Mar 2023", time: "18:11 UTC" }: fixed zone and locale so the stamp is identical everywhere. */
+export function formatUtcParts(iso: string): { date: string; time: string } {
+  const at = new Date(iso);
+  return { date: utcDate.format(at), time: `${utcTime.format(at)} UTC` };
+}
+
 export function formatCount(value: number | null | undefined): string {
   if (value == null || !Number.isFinite(value)) return '—';
   return Math.round(value).toLocaleString();
