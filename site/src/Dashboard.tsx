@@ -277,9 +277,12 @@ function AssumptionComparison({ data }: { data: DashboardData }) {
   const rolling = data.comparison.rolling2d;
   return (
     <section className="sample-section" id="comparison">
-      <div className="section-intro">
-        <div><span className="eyebrow">STAKE AVAILABILITY</span><h2>No market overlap first; then observed timing with a <span className="no-break">two-day lock.</span></h2></div>
-        <p><strong>All stake released</strong> treats each settlement attempt independently: it ignores overlap across markets and assumes every voter’s full stake is available at the start of each attempt. <strong>Resolution + 2 days</strong> instead follows the markets’ observed timing and keeps each admitted security load locked until the corresponding DVM resolution plus two days, so overlapping locks can reduce the residual stake available to later markets.</p>
+      <div className="section-intro assumption-intro">
+        <span className="eyebrow">STAKE AVAILABILITY</span>
+        <ul className="assumption-list" aria-label="The two stake-availability assumptions">
+          <li><strong>All stake released.</strong> Market overlap is ignored, and each settlement attempt is simulated independently with every voter’s full stake available.</li>
+          <li><strong>Resolution + 2 days.</strong> Market overlap is modeled using the observed settlement timing, and stake committed to an admitted market remains unavailable until that market’s DVM resolution plus two days.</li>
+        </ul>
       </div>
       <div className="comparison-table" role="table" aria-label="Stake availability comparison: all stake released versus resolution plus two days">
         <div className="comparison-head" role="row"><span>Assumption</span><span>Admission</span><span>Reward p50</span><span>Reward p90</span><span>Reward p99</span><span>Voters p99</span><span>History reward</span></div>

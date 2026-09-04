@@ -104,7 +104,11 @@ h1 { max-width: 860px; margin: 18px 0 22px; font: 600 clamp(36px, 3.9vw, 58px)/1
 .section-intro h1, .section-intro h2 { max-width: 780px; margin: 11px 0 0; font: 600 clamp(37.5px, 4.2vw, 59.5px)/1.04 var(--font-sans); letter-spacing: -.02em; }
 .section-intro h1:focus { outline: none; }
 .section-intro > p { margin: 0; color: var(--muted); font-size: 18px; line-height: 1.65; }
-.section-intro > p strong { color: var(--ink); font-weight: 600; }
+.assumption-intro { grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+.assumption-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: 17px; line-height: 1.6; }
+@media (max-width: 780px) { .assumption-list { grid-template-columns: 1fr; gap: 14px; } }
+.assumption-list li { padding-left: 14px; border-left: 2px solid var(--line-strong); }
+.assumption-list strong { color: var(--ink); font-weight: 600; }
 .section-intro.inverse .eyebrow { color: var(--slate); }
 .section-intro.inverse > p { color: var(--muted); }
 
