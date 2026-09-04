@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SiteHeader from './components/SiteHeader';
 import { Assign, Formula } from './components/math';
 import { loadDashboardData } from './useDashboardData';
-import { formatCount, formatPercent, formatRatio, formatUma, formatUsd, shortId } from './lib';
+import { formatCount, formatPercent, formatRatio, formatUma, formatUsd, formatUtcParts, shortId } from './lib';
 import type { DashboardData, Market, OracleVariant, QuantileKey, Quantiles, ScenarioName } from './types';
 
 const scenarioLabels: Record<ScenarioName, string> = {
@@ -115,6 +115,17 @@ function ProcessSimulator({
     setPlaying(true);
   };
 
+  const arrival = formatUtcParts(market.disputeUtc);
+  const resolution = formatUtcParts(market.releaseUtc);
+  // Identifiers that merely repeat another field (ordinary requests reuse the condition as the event and the request as the source) are dropped.
+  const identifiers: { label: string; value: string; raw?: boolean }[] = [
+    { label: 'Anchor OO request', value: market.requestId },
+    { label: 'Anchor condition', value: market.conditionId },
+    ...(market.eventId !== market.conditionId ? [{ label: 'Event', value: market.eventId }] : []),
+    { label: 'Economic unit', value: market.id },
+    { label: 'Polymarket slug', value: market.slug, raw: true },
+    ...(market.oracleSourceId !== market.requestId ? [{ label: 'Oracle source ID', value: market.oracleSourceId }] : []),
+  ];
   return (
     <section className="simulation-section" id="simulation">
       <div className="section-intro inverse">
@@ -175,7 +186,7 @@ function ProcessSimulator({
             <span className="step-kicker">STEP {step + 1} / {finalStep + 1}</span>
             <h3>{processSteps[step].title}</h3>
             <p>{processSteps[step].copy}</p>
-            {step === 0 && <p className="stage-note">{market.negRisk ? `Grouped by event and DVM round: ${market.componentCount} source requests share one reward pool.` : 'One ordinary binary request is one settlement attempt.'}</p>}
+            {step === 0 && <p className="stage-note">{market.negRisk ? `Grouped by event and DVM round: ${market.componentCount} source request${market.componentCount === 1 ? '' : 's'} share${market.componentCount === 1 ? 's' : ''} one reward pool.` : 'One ordinary binary request is one settlement attempt.'}</p>}
             {step === 1 && <p className="stage-note">OI scope: {market.oiScope}. {market.negRisk ? `${market.bundleConditionCount} active event conditions are summed once.` : 'The disputed condition is used directly.'}</p>}
             {step === 2 && <p className="stage-formula"><Formula><mi>r</mi><mo>=</mo><mi>OI</mi><mo>/</mo><mo>(</mo><mn>0.50</mn><mo>×</mo><msub><mi>P</mi><mtext>UMA</mtext></msub><mo>)</mo><mo>=</mo><mtext>{formatUma(market.securityLoadUma)}</mtext></Formula></p>}
             {step === 3 && (market.feasible
@@ -189,10 +200,22 @@ function ProcessSimulator({
 
           <div className={`stage-visual stage-${step}`}>
             {step === 0 && (
-              <div className="exposure-visual group-visual">
-                <div className="market-orb"><span>source requests</span><strong>{market.componentCount}</strong></div>
-                <div className="operator">→</div>
-                <div className="load-orb"><span>reward pools</span><strong>1</strong></div>
+              <div className="attempt-record">
+                <div className="cost-head">
+                  <span className="data-label observed">Attempt record · observed</span>
+                  {market.componentCount > 1 && <span>{market.componentCount} source requests share one reward pool</span>}
+                </div>
+                <div className="detail-grid">
+                  <div><span>Arrival</span><strong>{arrival.date}</strong><small>{arrival.time}</small></div>
+                  <div><span>DVM round</span><strong>{market.dvmRound}</strong></div>
+                  <div><span>DVM resolution</span><strong>{resolution.date}</strong><small>{resolution.time}</small></div>
+                  <div><span>Oracle deployment</span><strong>{oracleLabels[market.oracleVariant]}</strong></div>
+                  {identifiers.map((tile, index) => (
+                    <div key={tile.label} className={index === identifiers.length - 1 && identifiers.length % 2 === 1 ? 'full' : 'wide'}>
+                      <span>{tile.label}</span><strong className="ident" title={tile.value}>{tile.raw ? tile.value : shortId(tile.value)}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             {(step === 1 || step === 2) && (
@@ -471,9 +494,8 @@ export default function Dashboard() {
           <div className="hero-grid">
             <div>
               <div className="eyebrow">INTERACTIVE DEMO</div>
-              <h1 tabIndex={-1}>Sufficient rewards for disputed prediction markets.</h1>
-              <p className="hero-copy">The census contains {data.meta.inventoryCount.toLocaleString()} disputes across Standard OOv2, Managed OOv2, and legacy OOv1. Exact complete-case linkage retains {data.meta.sourceRequestCount.toLocaleString()} requests, which become {data.meta.economicUnitCount.toLocaleString()} economic settlement attempts: {data.meta.ordinaryUnitCount.toLocaleString()} ordinary requests and {data.meta.negRiskUnitCount.toLocaleString()} NegRisk event-round bundles.</p>
-              <div className="reviewer-note"><strong>Key correction.</strong> A NegRisk event’s active component-condition OI is summed once, and same-event requests in one DVM round share one reward pool. Full release is the clean single-market benchmark; a second run adds a two-day review window.</div>
+              <h1 tabIndex={-1}>Polymarket–UMA Simulation of Sufficient Rewards</h1>
+              <p className="hero-copy">The simulation uses historical Polymarket disputes and UMA voter stake data to estimate sufficient participation rewards across {data.meta.economicUnitCount.toLocaleString()} disputed market settlement attempts.</p>
             </div>
             <div className="hero-summary-table" aria-label="Panel summary">
               <span>Baseline · full release</span>
