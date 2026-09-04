@@ -1,0 +1,45 @@
+{
+  "arrival_rule": "earliest component dispute",
+  "economic_market_anchor_oracle_variant_counts": {
+    "polygon_managed_oo_v2": 1198,
+    "polygon_oo_v2": 1240
+  },
+  "economic_market_count": 2438,
+  "economic_voter_row_count": 1119968,
+  "grouping_rule": "ordinary request singleton; NegRisk requests grouped by (neg_risk_market_id, dvm_round)",
+  "market_output": "/Users/senyang/Desktop/Projects/oracle-design/data/verification_census_2026-05-31_all_polygon_oracles_economic_markets/economic_markets.csv",
+  "market_sha256": "0e8006b2d0ef0c780326b39deb3002b7c01eb0a54da82c49754015f970b2a2f7",
+  "neg_risk_bundle_round_count": 519,
+  "oi_rule": "anchor component bundle OI/security snapshot",
+  "oracle_provenance_complete_for_every_source_request": true,
+  "oracle_provenance_complete_source_request_count": 2978,
+  "oracle_provenance_fields": [
+    "oracle_variant",
+    "oracle_source_url",
+    "oracle_source_id"
+  ],
+  "oracle_provenance_output_rule": "market and voter oracle_* columns identify the anchor request; component_* and voter_component_* JSON columns preserve all underlying request sources",
+  "oracle_source_urls_by_variant": {
+    "polygon_managed_oo_v2": [
+      "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-managed-optimistic-oracle-v2/1.0.5/gn"
+    ],
+    "polygon_oo_v2": [
+      "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-optimistic-oracle-v2/1.1.0/gn"
+    ]
+  },
+  "ordinary_singleton_count": 1919,
+  "release_rule": "latest component DVM resolution plus simulation review window",
+  "request_input": "/Users/senyang/Desktop/Projects/oracle-design/data/verification_census_2026-05-31_all_polygon_oracles_bundle_oi/requests.csv",
+  "schema_version": "economic-market-panel-v1",
+  "source_neg_risk_request_count": 1059,
+  "source_ordinary_request_count": 1919,
+  "source_request_count": 2978,
+  "source_request_oracle_variant_counts": {
+    "polygon_managed_oo_v2": 1357,
+    "polygon_oo_v2": 1621
+  },
+  "voter_input": "/Users/senyang/Desktop/Projects/oracle-design/data/verification_census_2026-05-31_all_polygon_oracles/request_voters.csv",
+  "voter_output": "/Users/senyang/Desktop/Projects/oracle-design/data/verification_census_2026-05-31_all_polygon_oracles_economic_markets/economic_market_voters.csv.gz",
+  "voter_rule": "union normalized voter addresses; require identical stake_wei and protected classification on repeated appearances",
+  "voter_sha256": "b61f863846ddbe38cc203e97fdafef39d1db43aed26edbc44983a037a44ad8d1"
+}

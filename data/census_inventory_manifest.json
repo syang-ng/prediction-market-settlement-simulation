@@ -1,0 +1,147 @@
+{
+  "cursor_field": "id_per_oracle_variant",
+  "discovered_at_utc": "2026-08-25T14:55:26.581982Z",
+  "discovery_max_block": null,
+  "discovery_mode": "census",
+  "dispute_cutoff_timestamp": 1780272000,
+  "dispute_cutoff_utc": "2026-06-01T00:00:00Z",
+  "exhausted": true,
+  "inventory_count": 3325,
+  "inventory_fingerprint": "8f79bc5af4e5edb0fa1b4d6892657a70a3bb1abcf3c9aa7840f7a27fe47fd403",
+  "last_cursor": null,
+  "last_cursors": {
+    "polygon_managed_oo_v2": "YES_OR_NO_QUERY-1780246640-0x1a30e8a093ebdba03996289f8b8b22808a1ba346bfb7ad3562f48f5825c9b1a7",
+    "polygon_oo_v1_legacy": "YES_OR_NO_QUERY-1722541237-0x946a0df2f7e60fa8396203e1a860aeb7f8f901c8795840ae04f609913a316e2b",
+    "polygon_oo_v2": "YES_OR_NO_QUERY-1778908848-0xe70f09f3cd85d79673d747bbe1a2da1a035d6e39e60c8128e9edc14dc2b026c6"
+  },
+  "max_dispute_block": 87731489,
+  "max_dispute_timestamp": 1780269827,
+  "max_requests": null,
+  "min_dispute_block": 20394711,
+  "min_dispute_timestamp": 1634683267,
+  "oi_subgraph_head_block": 87814777,
+  "oracle_source_urls": {
+    "polygon_managed_oo_v2": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-managed-optimistic-oracle-v2/1.0.5/gn",
+    "polygon_oo_v1_legacy": "https://api.studio.thegraph.com/query/1057/polygon-optimistic-oracle/1.2.0",
+    "polygon_oo_v2": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-optimistic-oracle-v2/1.1.0/gn"
+  },
+  "oracle_variant_counts": {
+    "polygon_managed_oo_v2": 1480,
+    "polygon_oo_v1_legacy": 23,
+    "polygon_oo_v2": 1822
+  },
+  "oracle_variants": [
+    "polygon_oo_v2",
+    "polygon_managed_oo_v2",
+    "polygon_oo_v1_legacy"
+  ],
+  "order": "oracle_variant_then_id_asc",
+  "page_count": 5,
+  "page_size": 1000,
+  "query_count": 5,
+  "resolved_or_settled_count": 3323,
+  "resume_signature": {
+    "attack_capture_fraction": 1.0,
+    "corruption_threshold": 0.5,
+    "dispute_cutoff_timestamp": 1780272000,
+    "inventory_fingerprint": "8f79bc5af4e5edb0fa1b4d6892657a70a3bb1abcf3c9aa7840f7a27fe47fd403",
+    "oi_subgraph_head_block": 87814777,
+    "oracle_source_urls": {
+      "polygon_managed_oo_v2": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-managed-optimistic-oracle-v2/1.0.5/gn",
+      "polygon_oo_v1_legacy": "https://api.studio.thegraph.com/query/1057/polygon-optimistic-oracle/1.2.0",
+      "polygon_oo_v2": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-optimistic-oracle-v2/1.1.0/gn"
+    },
+    "oracle_variants": [
+      "polygon_oo_v2",
+      "polygon_managed_oo_v2",
+      "polygon_oo_v1_legacy"
+    ],
+    "theta_uma": 1000000.0
+  },
+  "source_metadata": {
+    "polygon_managed_oo_v2": {
+      "cursor_field": "id",
+      "discovery_max_block": null,
+      "exhausted": true,
+      "inventory_count": 1480,
+      "last_cursor": "YES_OR_NO_QUERY-1780246640-0x1a30e8a093ebdba03996289f8b8b22808a1ba346bfb7ad3562f48f5825c9b1a7",
+      "max_dispute_block": 87731489,
+      "max_dispute_timestamp": 1780269827,
+      "max_requests": null,
+      "min_dispute_block": 75647927,
+      "min_dispute_timestamp": 1756147567,
+      "oracle_source_url": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-managed-optimistic-oracle-v2/1.0.5/gn",
+      "oracle_variant": "polygon_managed_oo_v2",
+      "order": "id_asc",
+      "page_count": 2,
+      "page_size": 1000,
+      "query_count": 2,
+      "resolved_or_settled_count": 1480,
+      "state_counts": {
+        "Settled": 1480
+      },
+      "state_filter": null,
+      "truncated": false,
+      "unresolved_count": 0
+    },
+    "polygon_oo_v1_legacy": {
+      "cursor_field": "id",
+      "discovery_max_block": null,
+      "exhausted": true,
+      "inventory_count": 23,
+      "last_cursor": "YES_OR_NO_QUERY-1722541237-0x946a0df2f7e60fa8396203e1a860aeb7f8f901c8795840ae04f609913a316e2b",
+      "max_dispute_block": 60078853,
+      "max_dispute_timestamp": 1722542853,
+      "max_requests": null,
+      "min_dispute_block": 20394711,
+      "min_dispute_timestamp": 1634683267,
+      "oracle_source_url": "https://api.studio.thegraph.com/query/1057/polygon-optimistic-oracle/1.2.0",
+      "oracle_variant": "polygon_oo_v1_legacy",
+      "order": "id_asc",
+      "page_count": 1,
+      "page_size": 1000,
+      "query_count": 1,
+      "resolved_or_settled_count": 22,
+      "state_counts": {
+        "Disputed": 1,
+        "Settled": 22
+      },
+      "state_filter": null,
+      "truncated": false,
+      "unresolved_count": 1
+    },
+    "polygon_oo_v2": {
+      "cursor_field": "id",
+      "discovery_max_block": null,
+      "exhausted": true,
+      "inventory_count": 1822,
+      "last_cursor": "YES_OR_NO_QUERY-1778908848-0xe70f09f3cd85d79673d747bbe1a2da1a035d6e39e60c8128e9edc14dc2b026c6",
+      "max_dispute_block": 87622311,
+      "max_dispute_timestamp": 1780078766,
+      "max_requests": null,
+      "min_dispute_block": 30645122,
+      "min_dispute_timestamp": 1657637227,
+      "oracle_source_url": "https://api.goldsky.com/api/public/project_clus2fndawbcc01w31192938i/subgraphs/polygon-optimistic-oracle-v2/1.1.0/gn",
+      "oracle_variant": "polygon_oo_v2",
+      "order": "id_asc",
+      "page_count": 2,
+      "page_size": 1000,
+      "query_count": 2,
+      "resolved_or_settled_count": 1821,
+      "state_counts": {
+        "Disputed": 1,
+        "Settled": 1821
+      },
+      "state_filter": null,
+      "truncated": false,
+      "unresolved_count": 1
+    }
+  },
+  "state_counts": {
+    "Disputed": 2,
+    "Settled": 3323
+  },
+  "state_filter": null,
+  "truncated": false,
+  "unresolved_count": 2
+}
